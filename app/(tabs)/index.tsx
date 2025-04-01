@@ -7,8 +7,9 @@ import { ThemedView } from '@/components/ThemedView';
 import { NavigationContainer, NavigationIndependentTree } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import SignInScreen from '@/components/SignInScreen';
-import HomeScreen from '@/components/HomeScreen';
+import CreateAccount from '@/components/CreateAccount';
 import { Padding } from '@mui/icons-material';
+import HomeScreen from '@/components/HomeScreen';
 
 const Stack = createStackNavigator();
 export default function App() {
@@ -17,7 +18,8 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen name="Sign In" component={SignInScreen} />
-         <Stack.Screen name="New Account" component={HomeScreen} />
+         <Stack.Screen name="New Account" component={CreateAccount} />
+        <Stack.Screen name="Home" component={HomeScreen} />
       </Stack.Navigator>
     </NavigationContainer>
 </NavigationIndependentTree>
