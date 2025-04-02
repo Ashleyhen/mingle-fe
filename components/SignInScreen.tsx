@@ -4,21 +4,56 @@ import { NavigationProp } from '@react-navigation/native';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
-import { green } from 'react-native-reanimated/lib/typescript/Colors';
+import login  from '@/api/UserApi';
+import { CredentialsDto } from '@/protos/protos/user_pb';
+import { Alert } from 'react-native';
+
 
 export default function SignInScreen({ navigation }: { navigation: NavigationProp<any> }) {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  const handleSubmit = () => {
-    const formData = new FormData();
-    formData.append('email', email);
-    formData.append('password', password);
-
-    // Handle form submission, e.g., send formData to your server
-    // For now, navigate to the Home screen
-    navigation.navigate('New Account');
+  
+  const handleLogin = () => {
+    const credentials= new CredentialsDto();
+    credentials.setEmail(email);
+    credentials.setPassword(password);
+    login(credentials).subscribe({
+      next: (response) => {
+        console.log('Login successful:', response);
+        navigation.navigate('New Account');
+      },
+      error: (err) => {
+        console.error('Login failed:', err);
+        console.log('Error message:', err.message);
+        Alert.alert(
+          'Login Failed', // Title of the popup
+          err.message || 'An unknown error occurred.', // Error message to display
+          [{ text: 'OK', onPress: () => console.log('Popup dismissed') }] // Action for the "OK" button
+        );
+      },
+    });
   };
+  // const loginWithPopup = (credentials) => {
+  //   login(credentials).subscribe({
+  //     next: (response) => {
+  //       console.log('Login successful:', response);
+  //       navigation.navigate('New Account');
+  //     },
+  //     error: (err) => {
+  //       console.error('Login failed:', err);
+  
+  //       // Display popup with error message
+  //       Alert.alert(
+  //         'Login Failed', // Title of the popup
+  //         err.message || 'An unknown error occurred.', // Error message to display
+  //         [{ text: 'OK', onPress: () => console.log('Popup dismissed') }] // Action for the "OK" button
+  //       );
+  //     },
+  //   });
+  // };
+  
+  
 
   return (
     <View style={styles.container}>
@@ -37,7 +72,7 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
           value={password}
           onChangeText={setPassword}
         />
-        <Button title="Login" onPress={handleSubmit} />
+        <Button title="Login" onPress={handleLogin} />
         <View style={styles.separatorContainer}>
           <View style={styles.line} />
           <Text style={styles.separatorText}>or</Text>

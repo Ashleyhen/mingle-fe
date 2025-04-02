@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Expo App",
+      "request": "launch",
+      "type": "node",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "npx expo start"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}
