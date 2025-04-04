@@ -292,7 +292,7 @@ relationship: jspb.Message.getFieldWithDefault(msg, 10, ""),
 gender: jspb.Message.getFieldWithDefault(msg, 11, ""),
 sporttype: jspb.Message.getFieldWithDefault(msg, 12, ""),
 skill: jspb.Message.getFieldWithDefault(msg, 13, ""),
-agerange: jspb.Message.getFieldWithDefault(msg, 14, "")
+birthday: jspb.Message.getFieldWithDefault(msg, 14, "")
   };
 
   if (includeInstance) {
@@ -383,7 +383,7 @@ proto.authentication.MingleUserDto.deserializeBinaryFromReader = function(msg, r
       break;
     case 14:
       var value = /** @type {string} */ (reader.readString());
-      msg.setAgerange(value);
+      msg.setBirthday(value);
       break;
     default:
       reader.skipField();
@@ -505,7 +505,7 @@ proto.authentication.MingleUserDto.serializeBinaryToWriter = function(message, w
       f
     );
   }
-  f = message.getAgerange();
+  f = message.getBirthday();
   if (f.length > 0) {
     writer.writeString(
       14,
@@ -774,10 +774,10 @@ proto.authentication.MingleUserDto.prototype.setSkill = function(value) {
 
 
 /**
- * optional string ageRange = 14;
+ * optional string birthday = 14;
  * @return {string}
  */
-proto.authentication.MingleUserDto.prototype.getAgerange = function() {
+proto.authentication.MingleUserDto.prototype.getBirthday = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 14, ""));
 };
 
@@ -786,7 +786,7 @@ proto.authentication.MingleUserDto.prototype.getAgerange = function() {
  * @param {string} value
  * @return {!proto.authentication.MingleUserDto} returns this
  */
-proto.authentication.MingleUserDto.prototype.setAgerange = function(value) {
+proto.authentication.MingleUserDto.prototype.setBirthday = function(value) {
   return jspb.Message.setProto3StringField(this, 14, value);
 };
 

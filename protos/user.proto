@@ -31,7 +31,7 @@ message MingleUserDto {
   string gender=11;
   string sportType=12;
   string skill=13;
-  string ageRange=14;
+  string birthday=14;
 }
 
 

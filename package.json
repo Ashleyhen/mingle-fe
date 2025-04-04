@@ -10,23 +10,29 @@
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "expo lint",
-    "build": "protoc --plugin=protoc-gen-ts=$NVM_DIR/versions/node/v23.8.0/bin/protoc-gen-ts   --ts_out=service=grpc-web:./protos   --grpc-web_out=mode=grpcwebtext:./protos   ./protos/*.proto"
+    "buildl": "protoc --plugin=protoc-gen-ts=$NVM_DIR/versions/node/v23.8.0/bin/protoc-gen-ts   --ts_out=service=grpc-web:./protos   --grpc-web_out=mode=grpcwebtext:./protos   ./protos/*.proto",
+    "buildw": "protoc --plugin=protoc-gen-ts=\"C:\\nvm4w\\nodejs\\protoc-gen-ts.cmd\"   --plugin=protoc-gen-grpc-web=\"C:\\nvm4w\\nodejs\\protoc-gen-grpc-web.cmd\"   --js_out=import_style=commonjs,binary:./protos   --ts_out=service=grpc-web:./protos   --grpc-web_out=import_style=typescript,mode=grpcwebtext:./protos   ./protos/*.proto"
   },
   "jest": {
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@date-io/date-fns": "^3.2.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@expo/vector-icons": "^14.0.2",
+    "@grpc/grpc-js": "^1.13.2",
     "@improbable-eng/grpc-web": "^0.15.0",
     "@injectivelabs/grpc-web-react-native-transport": "^0.0.2",
-    "@mui/icons-material": "^6.4.5",
-    "@mui/material": "^6.4.7",
+    "@mui/icons-material": "^7.0.1",
+    "@mui/lab": "^7.0.0-beta.10",
+    "@mui/material": "^7.0.1",
+    "@mui/x-date-pickers": "^7.28.3",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/stack": "^7.1.1",
-    "expo": "~52.0.37",
+    "date-fns": "^4.1.0",
+    "expo": "^52.0.44",
     "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.7",
     "expo-font": "~13.0.4",
@@ -51,7 +57,8 @@
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "tslog": "^4.9.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

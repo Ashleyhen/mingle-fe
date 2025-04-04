@@ -66,8 +66,8 @@ export class MingleUserDto extends jspb.Message {
   getSkill(): string;
   setSkill(value: string): MingleUserDto;
 
-  getAgerange(): string;
-  setAgerange(value: string): MingleUserDto;
+  getBirthday(): string;
+  setBirthday(value: string): MingleUserDto;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): MingleUserDto.AsObject;
@@ -92,7 +92,7 @@ export namespace MingleUserDto {
     gender: string,
     sporttype: string,
     skill: string,
-    agerange: string,
+    birthday: string,
   }
 }
 

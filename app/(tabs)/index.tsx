@@ -17,7 +17,7 @@ export default function App() {
     <NavigationIndependentTree>
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="Sign In" component={SignInScreen} />
+        <Stack.Screen name="Login" component={SignInScreen} />
          <Stack.Screen name="New Account" component={CreateAccount} />
         <Stack.Screen name="Home" component={HomeScreen} />
       </Stack.Navigator>
