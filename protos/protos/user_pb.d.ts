@@ -25,6 +25,9 @@ export namespace CredentialsDto {
 }
 
 export class MingleUserDto extends jspb.Message {
+  getId(): number;
+  setId(value: number): MingleUserDto;
+
   getImage(): Uint8Array | string;
   getImage_asU8(): Uint8Array;
   getImage_asB64(): string;
@@ -79,6 +82,7 @@ export class MingleUserDto extends jspb.Message {
 
 export namespace MingleUserDto {
   export type AsObject = {
+    id: number,
     image: Uint8Array | string,
     bio: string,
     firstname: string,

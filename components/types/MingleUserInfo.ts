@@ -1,6 +1,6 @@
 enum Relationship {
-    S = "s",
-    R = "r",
+    S = "S",
+    R = "R",
   }
   
   enum Gender {
@@ -20,6 +20,7 @@ enum Relationship {
   }
   
   type MingleUserInfo ={
+    id?: number; // Not nullable
     image?: Uint8Array
     bio?: string; // Optional since @Column(length = 500) isn't nullable
     firstname: string; // Not nullable
@@ -32,7 +33,7 @@ enum Relationship {
     relationship?: Relationship; // Enum
     gender?: Gender; // Enum
     skill?: Skill; // Enum
-    birthday?: string; // Enum
+    birthday?: Date; // Enum
     playType?: PlayType; // Enum
   }
 

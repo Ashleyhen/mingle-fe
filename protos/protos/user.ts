@@ -99,6 +99,7 @@ export namespace authentication {
     export class MingleUserDto extends pb_1.Message {
         #one_of_decls: number[][] = [];
         constructor(data?: any[] | {
+            id?: number;
             image?: Uint8Array;
             bio?: string;
             firstname?: string;
@@ -117,6 +118,9 @@ export namespace authentication {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
+                if ("id" in data && data.id != undefined) {
+                    this.id = data.id;
+                }
                 if ("image" in data && data.image != undefined) {
                     this.image = data.image;
                 }
@@ -161,91 +165,98 @@ export namespace authentication {
                 }
             }
         }
-        get image() {
-            return pb_1.Message.getFieldWithDefault(this, 1, new Uint8Array(0)) as Uint8Array;
+        get id() {
+            return pb_1.Message.getFieldWithDefault(this, 1, 0) as number;
         }
-        set image(value: Uint8Array) {
+        set id(value: number) {
             pb_1.Message.setField(this, 1, value);
         }
-        get bio() {
-            return pb_1.Message.getFieldWithDefault(this, 2, "") as string;
+        get image() {
+            return pb_1.Message.getFieldWithDefault(this, 2, new Uint8Array(0)) as Uint8Array;
         }
-        set bio(value: string) {
+        set image(value: Uint8Array) {
             pb_1.Message.setField(this, 2, value);
         }
-        get firstname() {
+        get bio() {
             return pb_1.Message.getFieldWithDefault(this, 3, "") as string;
         }
-        set firstname(value: string) {
+        set bio(value: string) {
             pb_1.Message.setField(this, 3, value);
         }
-        get lastname() {
+        get firstname() {
             return pb_1.Message.getFieldWithDefault(this, 4, "") as string;
         }
-        set lastname(value: string) {
+        set firstname(value: string) {
             pb_1.Message.setField(this, 4, value);
         }
-        get username() {
+        get lastname() {
             return pb_1.Message.getFieldWithDefault(this, 5, "") as string;
         }
-        set username(value: string) {
+        set lastname(value: string) {
             pb_1.Message.setField(this, 5, value);
         }
-        get zip() {
+        get username() {
             return pb_1.Message.getFieldWithDefault(this, 6, "") as string;
         }
-        set zip(value: string) {
+        set username(value: string) {
             pb_1.Message.setField(this, 6, value);
         }
-        get email() {
+        get zip() {
             return pb_1.Message.getFieldWithDefault(this, 7, "") as string;
         }
-        set email(value: string) {
+        set zip(value: string) {
             pb_1.Message.setField(this, 7, value);
         }
-        get password() {
+        get email() {
             return pb_1.Message.getFieldWithDefault(this, 8, "") as string;
         }
-        set password(value: string) {
+        set email(value: string) {
             pb_1.Message.setField(this, 8, value);
         }
-        get phone() {
+        get password() {
             return pb_1.Message.getFieldWithDefault(this, 9, "") as string;
         }
-        set phone(value: string) {
+        set password(value: string) {
             pb_1.Message.setField(this, 9, value);
         }
-        get relationship() {
+        get phone() {
             return pb_1.Message.getFieldWithDefault(this, 10, "") as string;
         }
-        set relationship(value: string) {
+        set phone(value: string) {
             pb_1.Message.setField(this, 10, value);
         }
-        get gender() {
+        get relationship() {
             return pb_1.Message.getFieldWithDefault(this, 11, "") as string;
         }
-        set gender(value: string) {
+        set relationship(value: string) {
             pb_1.Message.setField(this, 11, value);
         }
-        get sportType() {
+        get gender() {
             return pb_1.Message.getFieldWithDefault(this, 12, "") as string;
         }
-        set sportType(value: string) {
+        set gender(value: string) {
             pb_1.Message.setField(this, 12, value);
         }
-        get skill() {
+        get sportType() {
             return pb_1.Message.getFieldWithDefault(this, 13, "") as string;
         }
-        set skill(value: string) {
+        set sportType(value: string) {
             pb_1.Message.setField(this, 13, value);
         }
-        get birthday() {
+        get skill() {
             return pb_1.Message.getFieldWithDefault(this, 14, "") as string;
         }
-        set birthday(value: string) {
+        set skill(value: string) {
             pb_1.Message.setField(this, 14, value);
         }
+        get birthday() {
+            return pb_1.Message.getFieldWithDefault(this, 15, "") as string;
+        }
+        set birthday(value: string) {
+            pb_1.Message.setField(this, 15, value);
+        }
         static fromObject(data: {
+            id?: number;
             image?: Uint8Array;
             bio?: string;
             firstname?: string;
@@ -262,6 +273,9 @@ export namespace authentication {
             birthday?: string;
         }): MingleUserDto {
             const message = new MingleUserDto({});
+            if (data.id != null) {
+                message.id = data.id;
+            }
             if (data.image != null) {
                 message.image = data.image;
             }
@@ -308,6 +322,7 @@ export namespace authentication {
         }
         toObject() {
             const data: {
+                id?: number;
                 image?: Uint8Array;
                 bio?: string;
                 firstname?: string;
@@ -323,6 +338,9 @@ export namespace authentication {
                 skill?: string;
                 birthday?: string;
             } = {};
+            if (this.id != null) {
+                data.id = this.id;
+            }
             if (this.image != null) {
                 data.image = this.image;
             }
@@ -371,34 +389,36 @@ export namespace authentication {
         serialize(w: pb_1.BinaryWriter): void;
         serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
             const writer = w || new pb_1.BinaryWriter();
+            if (this.id != 0)
+                writer.writeInt64(1, this.id);
             if (this.image.length)
-                writer.writeBytes(1, this.image);
+                writer.writeBytes(2, this.image);
             if (this.bio.length)
-                writer.writeString(2, this.bio);
+                writer.writeString(3, this.bio);
             if (this.firstname.length)
-                writer.writeString(3, this.firstname);
+                writer.writeString(4, this.firstname);
             if (this.lastname.length)
-                writer.writeString(4, this.lastname);
+                writer.writeString(5, this.lastname);
             if (this.username.length)
-                writer.writeString(5, this.username);
+                writer.writeString(6, this.username);
             if (this.zip.length)
-                writer.writeString(6, this.zip);
+                writer.writeString(7, this.zip);
             if (this.email.length)
-                writer.writeString(7, this.email);
+                writer.writeString(8, this.email);
             if (this.password.length)
-                writer.writeString(8, this.password);
+                writer.writeString(9, this.password);
             if (this.phone.length)
-                writer.writeString(9, this.phone);
+                writer.writeString(10, this.phone);
             if (this.relationship.length)
-                writer.writeString(10, this.relationship);
+                writer.writeString(11, this.relationship);
             if (this.gender.length)
-                writer.writeString(11, this.gender);
+                writer.writeString(12, this.gender);
             if (this.sportType.length)
-                writer.writeString(12, this.sportType);
+                writer.writeString(13, this.sportType);
             if (this.skill.length)
-                writer.writeString(13, this.skill);
+                writer.writeString(14, this.skill);
             if (this.birthday.length)
-                writer.writeString(14, this.birthday);
+                writer.writeString(15, this.birthday);
             if (!w)
                 return writer.getResultBuffer();
         }
@@ -409,45 +429,48 @@ export namespace authentication {
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        message.image = reader.readBytes();
+                        message.id = reader.readInt64();
                         break;
                     case 2:
-                        message.bio = reader.readString();
+                        message.image = reader.readBytes();
                         break;
                     case 3:
-                        message.firstname = reader.readString();
+                        message.bio = reader.readString();
                         break;
                     case 4:
-                        message.lastname = reader.readString();
+                        message.firstname = reader.readString();
                         break;
                     case 5:
-                        message.username = reader.readString();
+                        message.lastname = reader.readString();
                         break;
                     case 6:
-                        message.zip = reader.readString();
+                        message.username = reader.readString();
                         break;
                     case 7:
-                        message.email = reader.readString();
+                        message.zip = reader.readString();
                         break;
                     case 8:
-                        message.password = reader.readString();
+                        message.email = reader.readString();
                         break;
                     case 9:
-                        message.phone = reader.readString();
+                        message.password = reader.readString();
                         break;
                     case 10:
-                        message.relationship = reader.readString();
+                        message.phone = reader.readString();
                         break;
                     case 11:
-                        message.gender = reader.readString();
+                        message.relationship = reader.readString();
                         break;
                     case 12:
-                        message.sportType = reader.readString();
+                        message.gender = reader.readString();
                         break;
                     case 13:
-                        message.skill = reader.readString();
+                        message.sportType = reader.readString();
                         break;
                     case 14:
+                        message.skill = reader.readString();
+                        break;
+                    case 15:
                         message.birthday = reader.readString();
                         break;
                     default: reader.skipField();

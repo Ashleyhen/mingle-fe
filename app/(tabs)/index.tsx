@@ -7,10 +7,9 @@ import { ThemedView } from '@/components/ThemedView';
 import { NavigationContainer, NavigationIndependentTree } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import SignInScreen from '@/components/SignInScreen';
-import CreateAccount from '@/components/CreateAccount';
-import { Padding } from '@mui/icons-material';
 import HomeScreen from '@/components/HomeScreen';
-
+import Region from '@/components/Region';
+import Account from '@/components/Account';
 const Stack = createStackNavigator();
 export default function App() {
   return (
@@ -18,29 +17,17 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen name="Login" component={SignInScreen} />
-         <Stack.Screen name="New Account" component={CreateAccount} />
-        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="New Account">
+          {(props: any) => <Account {...props} mode="new" />}
+        </Stack.Screen>
+        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Logout' }} />
+        <Stack.Screen name="Region" component={Region} options={{ title: 'Home' }} />
+        <Stack.Screen name="Edit Account">
+          {(props:any) => <Account {...props} mode="edit" />}
+        </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
 </NavigationIndependentTree>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});

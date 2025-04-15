@@ -17,24 +17,27 @@ import MingleUserInfo, {
   PlayType,
   Relationship,
   Skill,
-} from "../components/types/MingleUserInfo"; // Adjusted the path to match the correct location
+} from "./types/MingleUserInfo"; // Adjusted the path to match the correct location
 import { MingleUserDto, SuccessMsg } from "@/protos/protos/user_pb";
 import ErrorAlert from "./ui/dialogBoxs/AlertPopup";
 import { get } from "http";
-import { DatePicker } from '@mui/x-date-pickers/DatePicker'
-export default function CreateAccount({
-  navigation,
-}: {
-  navigation: NavigationProp<any>;
-}) {
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { Dayjs } from "dayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { AccountInfoCacheService } from "./utility/CacheService";
+
+export type Mode = "new" | "edit" | "display";
+export default function Account({ navigation, mode }: { navigation: NavigationProp<any>; mode: Mode }) {
   const [open, setOpen] = React.useState(false);
   const [openErr, setOpenErr] = React.useState(false);
-
+  const [dayjs, setDayjs] = React.useState<Dayjs | null>(null);
   const [errorMsg, setErrorMsg] = React.useState(
     "An unexpected error has occured please try again later."
   );
-const errorTitle ="Error Creating Account"
 
+  const errorTitle = "Error Creating Account";
   const {
     handleSubmit,
     control,
@@ -45,19 +48,20 @@ const errorTitle ="Error Creating Account"
   } = useForm<MingleUserInfo>({
     mode: "onChange",
   });
+
   const handleSave = (password: string, confirmPassword: String) => {
     setValue("password", password);
+    const mingleUserInfo = getValues();
     onSubmit();
-
   };
+
   const onSubmit = () => {
-    let mingleUserInfo=getValues();
-    console.log(mingleUserInfo);
-    // createAccountApi()
+    let mingleUserInfo = getValues();
     const mingleUserDto = new MingleUserDto();
     mingleUserDto.setImage(mingleUserInfo.image ?? new Uint8Array(0));
     mingleUserDto.setBio(mingleUserInfo.bio ?? "");
     mingleUserDto.setFirstname(mingleUserInfo.firstname ?? "");
+    mingleUserDto.setUsername(mingleUserInfo.username ?? "");
     mingleUserDto.setLastname(mingleUserInfo.lastname ?? "");
     mingleUserDto.setZip(mingleUserInfo.zip ?? "");
     mingleUserDto.setEmail(mingleUserInfo.email ?? "");
@@ -67,23 +71,29 @@ const errorTitle ="Error Creating Account"
     mingleUserDto.setGender(mingleUserInfo.gender ?? "");
     mingleUserDto.setSporttype(mingleUserInfo.playType ?? "");
     mingleUserDto.setSkill(mingleUserInfo.skill ?? "");
-    mingleUserDto.setBirthday(mingleUserInfo.birthday ?? "");
+    mingleUserDto.setBirthday(
+      mingleUserInfo.birthday
+          ? new Date(mingleUserInfo.birthday).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+          }).replace(/\//g, '-')
+          : ""
+  );
     createAccountApi(mingleUserDto).subscribe({
-      next: (response:SuccessMsg) => {
-        console.info("Account created successfully:", response);
+      next: (response: SuccessMsg) => {
         navigation.navigate("Home");
+        mingleUserInfo.id = Number.parseInt(response.getMessage());
+        // AccountInfoCacheService.set(mingleUserDto);
       },
       error: (err) => {
-
         console.info("failed", err);
         setOpenErr(true);
-        if(err.message){
+        if (err.message) {
           setErrorMsg(err.message + " error occured. please try again later");
         }
-        
       },
     });
-
   };
 
   const openDialog = () => {
@@ -151,6 +161,13 @@ const errorTitle ="Error Creating Account"
     justifyContent: "center",
     padding: "1%",
   };
+
+  if(mode==='edit'){
+    const accountInfo=AccountInfoCacheService.get(); 
+    // setValue("lastname", accountInfo.getLastname() ?? "");
+    control._formValues.firstname = "John";
+  }
+
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -299,7 +316,7 @@ const errorTitle ="Error Creating Account"
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    type="text"
+                    type="email"
                     value={field.value || ""} // Ensure value is always defined
                     label="Email"
                     placeholder="johnsnow@email.com"
@@ -337,6 +354,26 @@ const errorTitle ="Error Creating Account"
           </Item>
 
           <Item>
+            <FormGrid sx={inputBox}>
+
+              <Controller
+              control={control}
+              name="birthday"
+              render={({ field }) => (
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  {...field}
+                  value={field.value || null} // Ensure value is always defined
+                  onChange={(newValue) => field.onChange(newValue)}
+                />
+              </LocalizationProvider>
+              )}
+              
+              >
+
+            </Controller>
+
+            </FormGrid>
             <FormGrid sx={inputBox}>
               <Controller
                 control={control}
@@ -445,20 +482,6 @@ const errorTitle ="Error Creating Account"
             <FormGrid sx={inputBox}>
               <Controller
                 control={control}
-                name="birthday"
-                render={({ field }) => (
-                  <DatePicker
-                  {...field}
-                  value={field.value ? new Date(field.value) : new Date()}
-                  onChange={(date: Date | null) => field.onChange(date)}
-                  // renderInput={(props: any) => (
-                  //   <TextField {...props} helperText="valid mask" />
-                  // )}
-                /> 
-                )}
-              ></Controller>
-              <Controller
-                control={control}
                 name="password"
                 render={(field) => (
                   <PasswordDialog
@@ -480,7 +503,12 @@ const errorTitle ="Error Creating Account"
               margin: "2%",
             }}
           >
-            <Button type="submit" variant="contained" onClick={openDialog} disabled={!isValid}>
+            <Button
+              type="submit"
+              variant="contained"
+              onClick={openDialog}
+              disabled={!isValid}
+            >
               Save
             </Button>
 
@@ -488,7 +516,12 @@ const errorTitle ="Error Creating Account"
               {" "}
               Back
             </Button>
-            <ErrorAlert open={openErr} setOpen={setOpenErr} errorMessage={errorMsg} errorTitle={errorTitle}></ErrorAlert>
+            <ErrorAlert
+              open={openErr}
+              setOpen={setOpenErr}
+              errorMessage={errorMsg}
+              errorTitle={errorTitle}
+            ></ErrorAlert>
           </WhiteBox>
         </Grid>
       </form>
