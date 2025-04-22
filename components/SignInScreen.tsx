@@ -4,61 +4,47 @@ import { NavigationProp } from '@react-navigation/native';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
-import login  from '@/api/UserApi';
-import { CredentialsDto } from '@/protos/protos/user_pb';
-import { Alert } from 'react-native';
+import {loginApi}  from '@/api/UserApi';
+import { CredentialsDto, MingleUserDto } from '@/protos/protos/user_pb';
+import { green, grey, lightBlue, red } from '@mui/material/colors';
+import ErrorAlert from './ui/dialogBoxs/AlertPopup';
+import MingleUserInfo from './types/MingleUserInfo';
+import { AccountInfoCacheService } from './utility/CacheService';
+import { toMingleUserInfo } from './utility/Mapper';
 
 
 export default function SignInScreen({ navigation }: { navigation: NavigationProp<any> }) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [open, setOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('Unexpected error occurred. Please try again later.');
+  const [errorTitle, setErrorTitle] = useState('Error');
   
+  const navigateToCreateAccount = ()=>navigation.navigate('New Account');
   const handleLogin = () => {
     const credentials= new CredentialsDto();
     credentials.setEmail(email);
     credentials.setPassword(password);
-    login(credentials).subscribe({
+    loginApi(credentials).subscribe({
       next: (response) => {
         console.log('Login successful:', response);
-        navigation.navigate('New Account');
+        const mingleUserInfo =toMingleUserInfo(response); // Convert to MingleUserInfo
+        AccountInfoCacheService.set(mingleUserInfo); // Cache the data
+        navigation.navigate("Home")
       },
       error: (err) => {
-        console.error('Login failed:', err);
-        console.log('Error message:', err.message);
-        Alert.alert(
-          'Login Failed', // Title of the popup
-          err.message || 'An unknown error occurred.', // Error message to display
-          [{ text: 'OK', onPress: () => console.log('Popup dismissed') }] // Action for the "OK" button
-        );
+        setOpen(true);
+        setErrorTitle("Unauthorized");
+        setErrorMsg(err.message + " error occured. please try again later");
       },
     });
   };
-  // const loginWithPopup = (credentials) => {
-  //   login(credentials).subscribe({
-  //     next: (response) => {
-  //       console.log('Login successful:', response);
-  //       navigation.navigate('New Account');
-  //     },
-  //     error: (err) => {
-  //       console.error('Login failed:', err);
-  
-  //       // Display popup with error message
-  //       Alert.alert(
-  //         'Login Failed', // Title of the popup
-  //         err.message || 'An unknown error occurred.', // Error message to display
-  //         [{ text: 'OK', onPress: () => console.log('Popup dismissed') }] // Action for the "OK" button
-  //       );
-  //     },
-  //   });
-  // };
-  
-  
 
   return (
     <View style={styles.container}>
         <View style={styles.form}>
-        <Text style={styles.title}>Sign In</Text>
+        <Text style={styles.title}>Login</Text>
         <TextInput
           placeholder="Email"
           style={styles.input}
@@ -73,6 +59,7 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
           onChangeText={setPassword}
         />
         <Button title="Login" onPress={handleLogin} />
+        <ErrorAlert open={open} setOpen={setOpen} errorMessage={errorMsg} errorTitle={errorTitle}></ErrorAlert>
         <View style={styles.separatorContainer}>
           <View style={styles.line} />
           <Text style={styles.separatorText}>or</Text>
@@ -85,8 +72,11 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
         <GoogleIcon style={styles.icon}/>
         </View>
         <Text style={{ textAlign: 'center', marginTop: 16 }}>
-          Need an account? <Text style={styles.createAccount  }>SIGN UP</Text>
+          Need an account? 
         </Text>
+        <View style={{ paddingVertical: '2%' }}>
+        <Button title="Sign up" color={green[300]} onPress={navigateToCreateAccount} />
+        </View>
       </View>
     </View>
   );
