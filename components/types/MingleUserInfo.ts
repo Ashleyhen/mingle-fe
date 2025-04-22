@@ -15,9 +15,11 @@ enum Relationship {
   }
   
   
-  enum PlayType {
+  enum SportType {
     COED='COED',EXCLUSIVE='EXCLUSIVE'
   }
+  
+  import dayjs, { Dayjs } from 'dayjs';
   
   type MingleUserInfo ={
     id?: number; // Not nullable
@@ -33,9 +35,9 @@ enum Relationship {
     relationship?: Relationship; // Enum
     gender?: Gender; // Enum
     skill?: Skill; // Enum
-    birthday?: Date; // Enum
-    playType?: PlayType; // Enum
+    birthday?: Dayjs; // Enum
+    sporttype?: SportType; // Enum
   }
 
   export default MingleUserInfo;
-  export { Relationship, Skill, Gender,PlayType};
+  export { Relationship, Skill, Gender,SportType};

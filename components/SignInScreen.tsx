@@ -10,6 +10,7 @@ import { green, grey, lightBlue, red } from '@mui/material/colors';
 import ErrorAlert from './ui/dialogBoxs/AlertPopup';
 import MingleUserInfo from './types/MingleUserInfo';
 import { AccountInfoCacheService } from './utility/CacheService';
+import { toMingleUserInfo } from './utility/Mapper';
 
 
 export default function SignInScreen({ navigation }: { navigation: NavigationProp<any> }) {
@@ -19,7 +20,7 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
   const [open, setOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('Unexpected error occurred. Please try again later.');
   const [errorTitle, setErrorTitle] = useState('Error');
-
+  
   const navigateToCreateAccount = ()=>navigation.navigate('New Account');
   const handleLogin = () => {
     const credentials= new CredentialsDto();
@@ -27,9 +28,10 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
     credentials.setPassword(password);
     loginApi(credentials).subscribe({
       next: (response) => {
-        console.debug('Login successful:', response);
-        navigation.navigate("Home");
-        // AccountInfoCacheService.set(response as MingleUserDto); // Cache the data
+        console.log('Login successful:', response);
+        const mingleUserInfo =toMingleUserInfo(response); // Convert to MingleUserInfo
+        AccountInfoCacheService.set(mingleUserInfo); // Cache the data
+        navigation.navigate("Home")
       },
       error: (err) => {
         setOpen(true);

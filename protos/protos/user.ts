@@ -595,11 +595,21 @@ export namespace authentication {
                 requestDeserialize: (bytes: Buffer) => MingleUserDto.deserialize(new Uint8Array(bytes)),
                 responseSerialize: (message: SuccessMsg) => Buffer.from(message.serialize()),
                 responseDeserialize: (bytes: Buffer) => SuccessMsg.deserialize(new Uint8Array(bytes))
+            },
+            update: {
+                path: "/authentication.UserGrpc/update",
+                requestStream: false,
+                responseStream: false,
+                requestSerialize: (message: MingleUserDto) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => MingleUserDto.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: SuccessMsg) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => SuccessMsg.deserialize(new Uint8Array(bytes))
             }
         };
         [method: string]: grpc_1.UntypedHandleCall;
         abstract login(call: grpc_1.ServerUnaryCall<CredentialsDto, MingleUserDto>, callback: grpc_1.sendUnaryData<MingleUserDto>): void;
         abstract create(call: grpc_1.ServerUnaryCall<MingleUserDto, SuccessMsg>, callback: grpc_1.sendUnaryData<SuccessMsg>): void;
+        abstract update(call: grpc_1.ServerUnaryCall<MingleUserDto, SuccessMsg>, callback: grpc_1.sendUnaryData<SuccessMsg>): void;
     }
     export class UserGrpcClient extends grpc_1.makeGenericClientConstructor(UnimplementedUserGrpcService.definition, "UserGrpc", {}) {
         constructor(address: string, credentials: grpc_1.ChannelCredentials, options?: Partial<grpc_1.ChannelOptions>) {
@@ -610,6 +620,9 @@ export namespace authentication {
         };
         create: GrpcUnaryServiceInterface<MingleUserDto, SuccessMsg> = (message: MingleUserDto, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<SuccessMsg>, options?: grpc_1.CallOptions | grpc_1.requestCallback<SuccessMsg>, callback?: grpc_1.requestCallback<SuccessMsg>): grpc_1.ClientUnaryCall => {
             return super.create(message, metadata, options, callback);
+        };
+        update: GrpcUnaryServiceInterface<MingleUserDto, SuccessMsg> = (message: MingleUserDto, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<SuccessMsg>, options?: grpc_1.CallOptions | grpc_1.requestCallback<SuccessMsg>, callback?: grpc_1.requestCallback<SuccessMsg>): grpc_1.ClientUnaryCall => {
+            return super.update(message, metadata, options, callback);
         };
     }
 }

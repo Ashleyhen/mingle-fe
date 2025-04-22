@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import FormGrid from "@mui/material/Grid"; // Adjust the import path as necessary
 import Grid from "@mui/material/Grid";
@@ -10,11 +10,11 @@ import Avatar from "@mui/material/Avatar/Avatar";
 import { Button, TextField } from "@mui/material";
 import { NavigationProp } from "@react-navigation/native";
 import PasswordDialog from "./ui/dialogBoxs/PasswordDialog";
-import { createAccountApi } from "@/api/UserApi";
-import { Controller, useForm } from "react-hook-form";
+import { createAccountApi, editAccountApi } from "@/api/UserApi";
+import { Controller, set, useForm } from "react-hook-form";
 import MingleUserInfo, {
   Gender,
-  PlayType,
+  SportType,
   Relationship,
   Skill,
 } from "./types/MingleUserInfo"; // Adjusted the path to match the correct location
@@ -22,17 +22,25 @@ import { MingleUserDto, SuccessMsg } from "@/protos/protos/user_pb";
 import ErrorAlert from "./ui/dialogBoxs/AlertPopup";
 import { get } from "http";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { AccountInfoCacheService } from "./utility/CacheService";
+import {  birthdayToDaysJs, birthdayToString, toMingleUserDto, toMingleUserInfo } from "./utility/Mapper";
+import { parse } from "path";
+import { waitForDebugger } from "inspector";
 
 export type Mode = "new" | "edit" | "display";
-export default function Account({ navigation, mode }: { navigation: NavigationProp<any>; mode: Mode }) {
+export default function Account({
+  navigation,
+  mode,
+}: {
+  navigation: NavigationProp<any>;
+  mode: Mode;
+}) {
   const [open, setOpen] = React.useState(false);
   const [openErr, setOpenErr] = React.useState(false);
-  const [dayjs, setDayjs] = React.useState<Dayjs | null>(null);
   const [errorMsg, setErrorMsg] = React.useState(
     "An unexpected error has occured please try again later."
   );
@@ -51,7 +59,6 @@ export default function Account({ navigation, mode }: { navigation: NavigationPr
 
   const handleSave = (password: string, confirmPassword: String) => {
     setValue("password", password);
-    const mingleUserInfo = getValues();
     onSubmit();
   };
 
@@ -69,22 +76,18 @@ export default function Account({ navigation, mode }: { navigation: NavigationPr
     mingleUserDto.setPhone(mingleUserInfo.phone ?? "");
     mingleUserDto.setRelationship(mingleUserInfo.relationship ?? "");
     mingleUserDto.setGender(mingleUserInfo.gender ?? "");
-    mingleUserDto.setSporttype(mingleUserInfo.playType ?? "");
+    mingleUserDto.setSporttype(mingleUserInfo.sporttype ?? "");
     mingleUserDto.setSkill(mingleUserInfo.skill ?? "");
     mingleUserDto.setBirthday(
-      mingleUserInfo.birthday
-          ? new Date(mingleUserInfo.birthday).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-          }).replace(/\//g, '-')
-          : ""
-  );
+      mingleUserInfo.birthday ? birthdayToString(mingleUserInfo.birthday) : ""
+        
+    );
     createAccountApi(mingleUserDto).subscribe({
       next: (response: SuccessMsg) => {
         navigation.navigate("Home");
         mingleUserInfo.id = Number.parseInt(response.getMessage());
-        // AccountInfoCacheService.set(mingleUserDto);
+        const mingleUserinfo = toMingleUserInfo(mingleUserDto); // Convert to MingleUserInfo
+        AccountInfoCacheService.set(mingleUserinfo);
       },
       error: (err) => {
         console.info("failed", err);
@@ -95,15 +98,37 @@ export default function Account({ navigation, mode }: { navigation: NavigationPr
       },
     });
   };
-
   const openDialog = () => {
-    console.log(getValues());
-    setOpen(true);
+    setTimeout(() => {},50000);
+    if (mode === "new") {
+      setOpen(true);
+      return;
+    } else {
+
+      const mingleUserInfo = getValues();
+      const mingleUserCache = AccountInfoCacheService.get();
+      mingleUserInfo.id = mingleUserCache.id;
+      console.log(control._formValues);
+      editAccountApi(toMingleUserDto(mingleUserInfo)).subscribe({
+        next: (response: SuccessMsg) => {
+          console.log("Account updated successfully:", response.getMessage());
+          AccountInfoCacheService.set(mingleUserInfo);
+          navigation.navigate("Home");
+        },
+        error: (err) => {
+          console.info("failed", err);
+          setOpenErr(true);
+          if (err.message) {
+            setErrorMsg(err.message + " error occured. please try again later");
+          }
+        },
+      });
+    }
   };
 
   const handleBack = () => {
     console.log("Form submitted!");
-    navigation.navigate("Login");
+    navigation.navigate("Home");
   };
   const centerStyle = {
     justifyContent: "center",
@@ -162,11 +187,25 @@ export default function Account({ navigation, mode }: { navigation: NavigationPr
     padding: "1%",
   };
 
-  if(mode==='edit'){
-    const accountInfo=AccountInfoCacheService.get(); 
-    // setValue("lastname", accountInfo.getLastname() ?? "");
-    control._formValues.firstname = "John";
-  }
+  useEffect(() => {
+    if (mode === "edit") {
+      const accountInfo = AccountInfoCacheService.get();
+      console.log(accountInfo);
+      control._formValues.bio = accountInfo.bio ?? "";
+      control._formValues.image = accountInfo.image ?? new Uint8Array(0);
+      control._formValues.firstname = accountInfo.firstname ?? "";
+      control._formValues.lastname = accountInfo.lastname ?? "";
+      control._formValues.username = accountInfo.username ?? "";
+      control._formValues.zip = accountInfo.zip ?? "";
+      control._formValues.email = accountInfo.email ?? "";
+      control._formValues.phone = accountInfo.phone ?? "";
+      control._formValues.relationship = accountInfo.relationship ?? "";
+      control._formValues.gender = accountInfo.gender ?? "";
+      control._formValues.sporttype = accountInfo.sporttype ?? "";
+      control._formValues.skill = accountInfo.skill ?? "";
+      control._formValues.birthday = accountInfo.birthday ? dayjs(accountInfo.birthday) : null;
+    }
+  }, [mode, control]);
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -355,24 +394,19 @@ export default function Account({ navigation, mode }: { navigation: NavigationPr
 
           <Item>
             <FormGrid sx={inputBox}>
-
               <Controller
-              control={control}
-              name="birthday"
-              render={({ field }) => (
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  {...field}
-                  value={field.value || null} // Ensure value is always defined
-                  onChange={(newValue) => field.onChange(newValue)}
-                />
-              </LocalizationProvider>
-              )}
-              
-              >
-
-            </Controller>
-
+                control={control}
+                name="birthday"
+                render={({ field }) => (
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      {...field}
+                      value={field.value || null} // Ensure value is always defined
+                      onChange={(newValue) => field.onChange(newValue)}
+                    />
+                  </LocalizationProvider>
+                )}
+              ></Controller>
             </FormGrid>
             <FormGrid sx={inputBox}>
               <Controller
@@ -423,19 +457,19 @@ export default function Account({ navigation, mode }: { navigation: NavigationPr
             <FormGrid sx={inputBox}>
               <Controller
                 control={control}
-                name="playType"
+                name="sporttype"
                 render={({ field }) => (
                   <ToggleButtonGroup
                     value={field.value} // Bind the current value from react-hook-form
                     exclusive
                     onChange={(event, value) => field.onChange(value)}
                   >
-                    <ToggleButton value={PlayType.COED} aria-label="coed">
+                    <ToggleButton value={SportType.COED} aria-label={SportType.COED}>
                       <Text>Coed</Text>
                     </ToggleButton>
                     <ToggleButton
-                      value={PlayType.EXCLUSIVE}
-                      aria-label="exclusive"
+                      value={SportType.EXCLUSIVE}
+                      aria-label={SportType.EXCLUSIVE}
                     >
                       <Text>Gender Exclusive</Text>
                     </ToggleButton>
@@ -506,10 +540,13 @@ export default function Account({ navigation, mode }: { navigation: NavigationPr
             <Button
               type="submit"
               variant="contained"
-              onClick={openDialog}
+              onClick={(event) => { 
+                event.preventDefault(); // Prevent default form submission
+                openDialog(); 
+              }}
               disabled={!isValid}
             >
-              Save
+              {mode === "new" ? "Save" : "Update"}
             </Button>
 
             <Button onClick={handleBack} variant="outlined">
@@ -528,3 +565,4 @@ export default function Account({ navigation, mode }: { navigation: NavigationPr
     </ScrollView>
   );
 }
+

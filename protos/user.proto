@@ -8,8 +8,8 @@ package authentication;
 
 service UserGrpc {
   rpc login (CredentialsDto) returns (MingleUserDto) {}
-
   rpc create(MingleUserDto) returns (SuccessMsg){}
+  rpc update(MingleUserDto) returns (SuccessMsg){}
 }
 
 message CredentialsDto {

@@ -125,5 +125,48 @@ export class UserGrpcClient {
     this.methodDescriptorcreate);
   }
 
+  methodDescriptorupdate = new grpcWeb.MethodDescriptor(
+    '/authentication.UserGrpc/update',
+    grpcWeb.MethodType.UNARY,
+    protos_user_pb.MingleUserDto,
+    protos_user_pb.SuccessMsg,
+    (request: protos_user_pb.MingleUserDto) => {
+      return request.serializeBinary();
+    },
+    protos_user_pb.SuccessMsg.deserializeBinary
+  );
+
+  update(
+    request: protos_user_pb.MingleUserDto,
+    metadata?: grpcWeb.Metadata | null): Promise<protos_user_pb.SuccessMsg>;
+
+  update(
+    request: protos_user_pb.MingleUserDto,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: protos_user_pb.SuccessMsg) => void): grpcWeb.ClientReadableStream<protos_user_pb.SuccessMsg>;
+
+  update(
+    request: protos_user_pb.MingleUserDto,
+    metadata?: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: protos_user_pb.SuccessMsg) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/authentication.UserGrpc/update',
+        request,
+        metadata || {},
+        this.methodDescriptorupdate,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/authentication.UserGrpc/update',
+    request,
+    metadata || {},
+    this.methodDescriptorupdate);
+  }
+
 }
 
