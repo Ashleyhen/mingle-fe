@@ -10,6 +10,8 @@ import SignInScreen from '@/components/SignInScreen';
 import HomeScreen from '@/components/HomeScreen';
 import Region from '@/components/Region';
 import Account from '@/components/Account';
+import "./index.css"; // Import Tailwind CSS
+
 const Stack = createStackNavigator();
 export default function App() {
   return (

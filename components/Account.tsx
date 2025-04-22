@@ -106,109 +106,109 @@ export default function Account({
     } else {
 
       const mingleUserInfo = getValues();
-      const mingleUserCache = AccountInfoCacheService.get();
-      mingleUserInfo.id = mingleUserCache.id;
-      console.log(control._formValues);
-      editAccountApi(toMingleUserDto(mingleUserInfo)).subscribe({
-        next: (response: SuccessMsg) => {
-          console.log("Account updated successfully:", response.getMessage());
-          AccountInfoCacheService.set(mingleUserInfo);
-          navigation.navigate("Home");
-        },
-        error: (err) => {
-          console.info("failed", err);
-          setOpenErr(true);
-          if (err.message) {
-            setErrorMsg(err.message + " error occured. please try again later");
-          }
-        },
-      });
-    }
-  };
+    const mingleUserCache = AccountInfoCacheService.get();
+    mingleUserInfo.id = mingleUserCache.id;
+    console.log(control._formValues);
+    editAccountApi(toMingleUserDto(mingleUserInfo)).subscribe({
+      next: (response: SuccessMsg) => {
+        console.log("Account updated successfully:", response.getMessage());
+        AccountInfoCacheService.set(mingleUserInfo);
+        navigation.navigate("Home");
+      },
+      error: (err) => {
+        console.info("failed", err);
+        setOpenErr(true);
+        if (err.message) {
+          setErrorMsg(err.message + " error occured. please try again later");
+        }
+      },
+    });
+  }
+};
 
-  const handleBack = () => {
-    console.log("Form submitted!");
-    navigation.navigate("Home");
-  };
-  const centerStyle = {
-    justifyContent: "center",
-    alignItems: "center",
-    overflowX: "auto",
-  };
+const handleBack = () => {
+  console.log("Form submitted!");
+  navigation.navigate("Home");
+};
+const centerStyle = {
+  justifyContent: "center",
+  alignItems: "center",
+  overflowX: "auto",
+};
 
-  const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: "#fff",
-    ...theme.typography.body2,
-    padding: theme.spacing(4),
-    alignItems: "center",
-    textAlign: "left",
-    justifyContent: "center",
-    color: theme.palette.text.secondary,
-    margin: theme.spacing(2, 2, 0, 2),
-    width: "90%",
-    flexDirection: "row",
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)", // Default for large screens
-    [theme.breakpoints.down("lg")]: {
-      gridTemplateColumns: "repeat(2, 1fr)", // Medium screens
-    },
-    [theme.breakpoints.down("sm")]: {
-      gridTemplateColumns: "repeat(1, 1fr)", // Small screens
-    },
-  }));
-  const WhiteBox = styled(Paper)(({ theme }) => ({
-    backgroundColor: "#fff",
-    ...theme.typography.body2,
-    padding: theme.spacing(4),
-    alignItems: "center",
-    textAlign: "left",
-    justifyContent: "center",
-    color: theme.palette.text.secondary,
-    shadowOffset: { width: 0, height: 4 },
-    margin: "2% 2% 0% 2%",
-    width: "90%",
-    flexDirection: "row",
-    borderColor: "#ddd",
-    shadowRadius: 8,
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: "#fff",
+  ...theme.typography.body2,
+  padding: theme.spacing(4),
+  alignItems: "center",
+  textAlign: "left",
+  justifyContent: "center",
+  color: theme.palette.text.secondary,
+  margin: theme.spacing(2, 2, 0, 2),
+  width: "90%",
+  flexDirection: "row",
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)", // Default for large screens
+  [theme.breakpoints.down("lg")]: {
+    gridTemplateColumns: "repeat(2, 1fr)", // Medium screens
+  },
+  [theme.breakpoints.down("sm")]: {
+    gridTemplateColumns: "repeat(1, 1fr)", // Small screens
+  },
+}));
+const WhiteBox = styled(Paper)(({ theme }) => ({
+  backgroundColor: "#fff",
+  ...theme.typography.body2,
+  padding: theme.spacing(4),
+  alignItems: "center",
+  textAlign: "left",
+  justifyContent: "center",
+  color: theme.palette.text.secondary,
+  shadowOffset: { width: 0, height: 4 },
+  margin: "2% 2% 0% 2%",
+  width: "90%",
+  flexDirection: "row",
+  borderColor: "#ddd",
+  shadowRadius: 8,
 
-    [theme.breakpoints.down("sm")]: {
-      columnCount: 1, // Small screens
-    },
-  }));
+  [theme.breakpoints.down("sm")]: {
+    columnCount: 1, // Small screens
+  },
+}));
 
-  const inputBox = {
-    xs: 8,
-    md: 8,
-    lg: 8,
+const inputBox = {
+  xs: 8,
+  md: 8,
+  lg: 8,
 
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    padding: "1%",
-  };
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  padding: "1%",
+};
 
-  useEffect(() => {
-    if (mode === "edit") {
-      const accountInfo = AccountInfoCacheService.get();
-      console.log(accountInfo);
-      control._formValues.bio = accountInfo.bio ?? "";
-      control._formValues.image = accountInfo.image ?? new Uint8Array(0);
-      control._formValues.firstname = accountInfo.firstname ?? "";
-      control._formValues.lastname = accountInfo.lastname ?? "";
-      control._formValues.username = accountInfo.username ?? "";
-      control._formValues.zip = accountInfo.zip ?? "";
-      control._formValues.email = accountInfo.email ?? "";
-      control._formValues.phone = accountInfo.phone ?? "";
-      control._formValues.relationship = accountInfo.relationship ?? "";
-      control._formValues.gender = accountInfo.gender ?? "";
-      control._formValues.sporttype = accountInfo.sporttype ?? "";
-      control._formValues.skill = accountInfo.skill ?? "";
-      control._formValues.birthday = accountInfo.birthday ? dayjs(accountInfo.birthday) : null;
-    }
-  }, [mode, control]);
+useEffect(() => {
+  if (mode === "edit") {
+    const accountInfo = AccountInfoCacheService.get();
+    console.log(accountInfo);
+    control._formValues.bio = accountInfo.bio ?? "";
+    control._formValues.image = accountInfo.image ?? new Uint8Array(0);
+    control._formValues.firstname = accountInfo.firstname ?? "";
+    control._formValues.lastname = accountInfo.lastname ?? "";
+    control._formValues.username = accountInfo.username ?? "";
+    control._formValues.zip = accountInfo.zip ?? "";
+    control._formValues.email = accountInfo.email ?? "";
+    control._formValues.phone = accountInfo.phone ?? "";
+    control._formValues.relationship = accountInfo.relationship ?? "";
+    control._formValues.gender = accountInfo.gender ?? "";
+    control._formValues.sporttype = accountInfo.sporttype ?? "";
+    control._formValues.skill = accountInfo.skill ?? "";
+    control._formValues.birthday = accountInfo.birthday ? dayjs(accountInfo.birthday) : null;
+  }
+}, [mode, control]);
 
-  return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+return (
+  <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container component="form" sx={centerStyle}>
           <WhiteBox>
