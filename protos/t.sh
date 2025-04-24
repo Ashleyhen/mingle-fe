@@ -1,0 +1,17 @@
+curl ^"http://localhost:8080/authentication.UserGrpc/create^" 
+  -H ^"Accept: application/grpc-web-text^" 
+  -H ^"Accept-Language: en-US,en;q=0.9^" 
+  -H ^"Connection: keep-alive^" ^
+  -H ^"Content-Type: application/grpc-web-text^" ^
+  -H ^"Origin: http://localhost:8081^" ^
+  -H ^"Referer: http://localhost:8081/^" ^
+  -H ^"Sec-Fetch-Dest: empty^" ^
+  -H ^"Sec-Fetch-Mode: cors^" ^
+  -H ^"Sec-Fetch-Site: same-site^" ^
+  -H ^"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0^" ^
+  -H ^"X-Grpc-Web: 1^" ^
+  -H ^"X-User-Agent: grpc-web-javascript/0.1^" ^
+  -H ^"sec-ch-ua: ^\^"Microsoft Edge^\^";v=^\^"135^\^", ^\^"Not-A.Brand^\^";v=^\^"8^\^", ^\^"Chromium^\^";v=^\^"135^\^"^" ^
+  -H ^"sec-ch-ua-mobile: ?0^" ^
+  -H ^"sec-ch-ua-platform: ^\^"Windows^\^"^" ^
+  --data-raw ^"AAAAAFoiBkFzaGxleSoLSGVuZHJpY2tzb24yBzFhc2RmYWg6BTEyMzQ1QhExYXNkZmFoQGdtYWlsLmNvbUoIQWgxMTI0OTVSCjUxNzI0MDMyMDN6CjA0LTIzLTIwMjU=^"

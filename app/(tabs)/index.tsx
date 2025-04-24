@@ -8,7 +8,7 @@ import { NavigationContainer, NavigationIndependentTree } from '@react-navigatio
 import { createStackNavigator } from '@react-navigation/stack';
 import SignInScreen from '@/components/SignInScreen';
 import HomeScreen from '@/components/HomeScreen';
-import Region from '@/components/Region';
+import Group from '@/components/Group';
 import Account from '@/components/Account';
 const Stack = createStackNavigator();
 export default function App() {
@@ -21,7 +21,7 @@ export default function App() {
           {(props: any) => <Account {...props} mode="new" />}
         </Stack.Screen>
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Logout' }} />
-        <Stack.Screen name="Region" component={Region} options={{ title: 'Home' }} />
+        <Stack.Screen name="Group" component={Group} options={{ title: 'Home' }} />
         <Stack.Screen name="Edit Account">
           {(props:any) => <Account {...props} mode="edit" />}
         </Stack.Screen>

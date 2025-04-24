@@ -30,6 +30,7 @@ import { AccountInfoCacheService } from "./utility/CacheService";
 import {  birthdayToDaysJs, birthdayToString, toMingleUserDto, toMingleUserInfo } from "./utility/Mapper";
 import { parse } from "path";
 import { waitForDebugger } from "inspector";
+import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
 
 export type Mode = "new" | "edit" | "display";
 export default function Account({
@@ -41,11 +42,8 @@ export default function Account({
 }) {
   const [open, setOpen] = React.useState(false);
   const [openErr, setOpenErr] = React.useState(false);
-  const [errorMsg, setErrorMsg] = React.useState(
-    "An unexpected error has occured please try again later."
-  );
+  const [errorMsg, setErrorMsg] = React.useState( new ErrorDetailResponse());
 
-  const errorTitle = "Error Creating Account";
   const {
     handleSubmit,
     control,
@@ -89,12 +87,10 @@ export default function Account({
         const mingleUserinfo = toMingleUserInfo(mingleUserDto); // Convert to MingleUserInfo
         AccountInfoCacheService.set(mingleUserinfo);
       },
-      error: (err) => {
-        console.info("failed", err);
+      error: (errorDetailResponse:ErrorDetailResponse) => {
+        console.error("failed", errorDetailResponse);
         setOpenErr(true);
-        if (err.message) {
-          setErrorMsg(err.message + " error occured. please try again later");
-        }
+          setErrorMsg(errorDetailResponse);
       },
     });
   };
@@ -115,12 +111,10 @@ export default function Account({
           AccountInfoCacheService.set(mingleUserInfo);
           navigation.navigate("Home");
         },
-        error: (err) => {
+        error: (err:ErrorDetailResponse) => {
           console.info("failed", err);
           setOpenErr(true);
-          if (err.message) {
-            setErrorMsg(err.message + " error occured. please try again later");
-          }
+          setErrorMsg(err);
         },
       });
     }
@@ -556,8 +550,7 @@ export default function Account({
             <ErrorAlert
               open={openErr}
               setOpen={setOpenErr}
-              errorMessage={errorMsg}
-              errorTitle={errorTitle}
+              errorResponse={errorMsg}
             ></ErrorAlert>
           </WhiteBox>
         </Grid>
