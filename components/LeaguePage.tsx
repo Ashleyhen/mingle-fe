@@ -18,78 +18,63 @@ import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import { useForm, Controller } from "react-hook-form";
 import * as ImagePicker from "expo-image-picker";
 import dayjs, { Dayjs } from "dayjs";
-import { ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
+import { LeaguesForm, LocationForm, TimeSlot } from "./types/LeaguesType";
 
-type LeaguesForm = {
-  eventName: string;
-  startDate: Dayjs;
-  endDate: Dayjs;
-  pricePerPlayer: number;
-  description: string;
-  playersPerTeam: number;
-};
 
-type LocationForm = {
-  hostEmail: string;
-  hostName: string;
-  locationAddress: string;
-  zipCode: string;
-  name: string;
-  description: string;
-  photos: string[];
-};
+
+
+
+
 
 export default function LeaguePage() {
   const { control, handleSubmit, reset, formState: { errors, isValid } } = useForm<LeaguesForm>({
     mode: "onBlur",
   });
-  const { control: locationControl, handleSubmit: handleLocationSubmit, reset: resetLocation } = useForm<LocationForm>({
-    mode: "onBlur",
-  });
-  const [photos, setPhotos] = useState<string[]>([]);
+    
   const [locations, setLocations] = useState<LocationForm[]>([]);
 
+  const locationForm = useForm<LocationForm>({
+    mode: "onBlur",
+  });
+
+  const { control: locationControl, handleSubmit: handleLocationSubmit } = locationForm;
+
   const onSubmit = (data: LeaguesForm) => {
-    console.log("Form Data:", { ...data, photos, locations });
+    console.log("Form Data:", { ...data, locations });
     alert("Event created successfully!");
     reset();
-    setPhotos([]);
     setLocations([]);
   };
 
+  const resetLocation = () => {
+    // Add logic to reset location form fields if needed
+    console.log("Resetting location form fields");
+  };
+
   const addLocation = (data: LocationForm) => {
-    setLocations((prevLocations) => [...prevLocations, { ...data, photos: [] }]);
+    setLocations((prevLocations) => [...prevLocations, { ...data, photos: [], times: [] }]);
     resetLocation();
   };
 
-  const addLocationPhoto = async (index: number) => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setLocations((prevLocations) => {
-        const updatedLocations = [...prevLocations];
-        updatedLocations[index].photos = [
-          ...updatedLocations[index].photos,
-          result.assets[0].uri,
-        ];
-        return updatedLocations;
-      });
-    }
-  };
-
-  const removeLocationPhoto = (locationIndex: number, photoIndex: number) => {
+  const addTimeSlot = (locationIndex: number, timeSlot: TimeSlot) => {
     setLocations((prevLocations) => {
       const updatedLocations = [...prevLocations];
-      updatedLocations[locationIndex].photos = updatedLocations[locationIndex].photos.filter(
-        (_, i) => i !== photoIndex
-      );
+      updatedLocations[locationIndex].times.push(timeSlot);
       return updatedLocations;
     });
   };
+const removeTimeSlot = (locationIndex: number, timeIndex: number) => {
+    setLocations((prevLocations) => {
+      const updatedLocations = [...prevLocations];
+      updatedLocations[locationIndex].times = updatedLocations[locationIndex].times.filter(
+        (_, i) => i !== timeIndex
+      );
+      return updatedLocations;
+    });
+
+  };
+  
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -210,6 +195,25 @@ export default function LeaguePage() {
                   />
                 )}
               />
+
+              {/* Duration */}
+              <Controller
+                control={control}
+                name="duration"
+                rules={{ required: "Description is required" }}
+                render={({ field, fieldState: { error } }) => (
+                  <TextField
+                    {...field}
+                    label="Duration of each match"
+                    placeholder="Enter event description"
+                    fullWidth
+                    rows={4}
+                    error={!!error}
+                    helperText={error?.message}
+                  />
+                )}
+              />
+
 
               {/* Players Per Team */}
               <Controller
@@ -343,8 +347,8 @@ export default function LeaguePage() {
               <Typography variant="h6" gutterBottom>
                 Added Locations
               </Typography>
-              {locations.map((location, index) => (
-                <Accordion key={index}>
+              {locations.map((location, locationIndex) => (
+                <Accordion key={locationIndex}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography>{location.name}</Typography>
                   </AccordionSummary>
@@ -355,59 +359,89 @@ export default function LeaguePage() {
                     <Typography>
                       <strong>Description:</strong> {location.description}
                     </Typography>
-                    <Button
-                      variant="contained"
-                      onClick={() => addLocationPhoto(index)}
-                      sx={{ marginTop: 2 }}
-                    >
-                      Upload Photos
-                    </Button>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 1,
-                        marginTop: 2,
-                      }}
-                    >
-                      {location.photos.map((photo, photoIndex) => (
-                        <Box
-                          key={photoIndex}
-                          sx={{
-                            position: "relative",
-                            width: 100,
-                            height: 100,
-                          }}
+
+{/* Add Time Slot */}
+                    <Typography variant="h6" gutterBottom>
+                      Add Time Slot
+                    </Typography>
+                    <Grid container spacing={2}>
+                        <TextField
+                          label="Day"
+                          select
+                          fullWidth
+                          value={location.newTimeSlot?.day || ""}
+                          onChange={(e) =>
+                            setLocations((prevLocations) => {
+                              const updatedLocations = [...prevLocations];
+                              updatedLocations[locationIndex].newTimeSlot = {
+                                ...updatedLocations[locationIndex].newTimeSlot,
+                                day: e.target.value || "",
+                                startTime: updatedLocations[locationIndex].newTimeSlot?.startTime || "",
+                                endTime: updatedLocations[locationIndex].newTimeSlot?.endTime || "",
+                              } as TimeSlot;
+                              updatedLocations[locationIndex].newTimeSlot.day = updatedLocations[locationIndex].newTimeSlot.day || "Monday";
+                              updatedLocations[locationIndex].newTimeSlot.day = updatedLocations[locationIndex].newTimeSlot.day || "Monday";
+                              return updatedLocations;
+                            })
+                          }
                         >
-                          <Box
-                            component="img"
-                            src={photo}
-                            alt={`Photo ${photoIndex + 1}`}
-                            sx={{
-                              width: "100%",
-                              height: "100%",
-                              borderRadius: 1,
-                              objectFit: "cover",
-                            }}
-                          />
-                          <IconButton
-                            size="small"
-                            onClick={() => removeLocationPhoto(index, photoIndex)}
-                            sx={{
-                              position: "absolute",
-                              top: 0,
-                              right: 0,
-                              backgroundColor: "rgba(255, 255, 255, 0.8)",
-                              "&:hover": {
-                                backgroundColor: "rgba(255, 255, 255, 1)",
-                              },
-                            }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      ))}
-                    </Box>
+                          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(
+                            (day) => (
+                              <MenuItem key={day} value={day}>
+                                {day}
+                              </MenuItem>
+                            )
+                          )}
+                        </TextField>
+                        <TextField
+                          label="Start Time"
+                          type="time"
+                          fullWidth
+                          value={location.newTimeSlot?.startTime || ""}
+                          onChange={(e) =>
+                            setLocations((prevLocations) => {
+                              const updatedLocations = [...prevLocations];
+                              updatedLocations[locationIndex].newTimeSlot = {
+                                ...updatedLocations[locationIndex].newTimeSlot,
+                                startTime: e.target.value,
+                              };
+                              return updatedLocations;
+                            })
+                          }
+                        />
+                        <TextField
+                          label="End Time"
+                          type="time"
+                          fullWidth
+                          value={location.newTimeSlot?.endTime || ""}
+                          onChange={(e) =>
+                            setLocations((prevLocations) => {
+                              const updatedLocations = [...prevLocations];
+                              updatedLocations[locationIndex].newTimeSlot = {
+                                ...updatedLocations[locationIndex].newTimeSlot,
+                                endTime: e.target.value,
+                              };
+                              return updatedLocations;
+                            })
+                          }
+                        />
+                    </Grid>
+                    <Typography variant="h6" gutterBottom>
+                      Time Slots
+                    </Typography>
+                    {location.times.map((time, timeIndex) => (
+                      <Box key={timeIndex} sx={{ marginBottom: 2 }}>
+                        <Typography>
+                          <strong>{time.day}</strong>: {time.startTime} - {time.endTime}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => removeTimeSlot(locationIndex, timeIndex)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
                   </AccordionDetails>
                 </Accordion>
               ))}
