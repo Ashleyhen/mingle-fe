@@ -141,10 +141,11 @@ export default function HomeScreen({
               run: () => console.log("Region clicked"),
             },
             {
-              text: "Events",
+              text: "Leagues",
               icon: <EventIcon />,
-              run: () => console.log("Events clicked"),
+              run: () =>navigation.navigate("LeaguesPage"),
             },
+
           ].map((item, index) => (
             <ListItem
               key={index}

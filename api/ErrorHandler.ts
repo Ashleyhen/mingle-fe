@@ -2,6 +2,7 @@ import { Subscriber } from "rxjs/internal/Subscriber";
 import * as grpcWeb from "grpc-web";
 import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
 import { Buffer } from "buffer";
+import * as jspb from "google-protobuf";
 
 export const handleResult= <T>(err: grpcWeb.RpcError, response: T, subscriber:Subscriber<T>) => {
       if (err) {
@@ -20,3 +21,5 @@ export const handleResult= <T>(err: grpcWeb.RpcError, response: T, subscriber:Su
         subscriber.complete(); // Complete the Observable
       }
     };
+
+

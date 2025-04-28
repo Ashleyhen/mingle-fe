@@ -17,6 +17,9 @@ import MingleUserInfo, {
   SportType,
   Relationship,
   Skill,
+  birthdayToString,
+  toMingleUserInfo,
+  toMingleUserDto,
 } from "./types/MingleUserInfo"; // Adjusted the path to match the correct location
 import { MingleUserDto, SuccessMsg } from "@/protos/protos/user_pb";
 import ErrorAlert from "./ui/dialogBoxs/AlertPopup";
@@ -27,12 +30,11 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider/L
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { AccountInfoCacheService } from "./utility/CacheService";
-import {  birthdayToDaysJs, birthdayToString, toMingleUserDto, toMingleUserInfo } from "./utility/Mapper";
 import { parse } from "path";
 import { waitForDebugger } from "inspector";
 import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
+import { Mode } from "@/constants/State";
 
-export type Mode = "new" | "edit" | "display";
 export default function Account({
   navigation,
   mode,
@@ -95,7 +97,6 @@ export default function Account({
     });
   };
   const openDialog = () => {
-    setTimeout(() => {},50000);
     if (mode === "new") {
       setOpen(true);
       return;

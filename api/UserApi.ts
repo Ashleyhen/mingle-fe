@@ -17,7 +17,6 @@ const client = new UserGrpcClient("http://localhost:8080"); // Envoy proxy URL
  * @param password - User's password
  * @returns Observable<MingleUserDto>
  */
-
 const loginApi = (credentials: CredentialsDto): Observable<MingleUserDto> => {
   return new Observable((subscriber) => {
     // Create the gRPC CredentialsDto request object

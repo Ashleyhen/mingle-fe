@@ -8,9 +8,8 @@ import {loginApi}  from '@/api/UserApi';
 import { CredentialsDto, MingleUserDto } from '@/protos/protos/user_pb';
 import { green, grey, lightBlue, red } from '@mui/material/colors';
 import ErrorAlert from './ui/dialogBoxs/AlertPopup';
-import MingleUserInfo from './types/MingleUserInfo';
+import MingleUserInfo, { toMingleUserInfo } from './types/MingleUserInfo';
 import { AccountInfoCacheService } from './utility/CacheService';
-import { toMingleUserInfo } from './utility/Mapper';
 import { ErrorDetailResponse } from '@/protos/protos/ErrorDetailResponse_pb';
 
 
