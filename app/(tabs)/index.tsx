@@ -8,8 +8,9 @@ import { NavigationContainer, NavigationIndependentTree } from '@react-navigatio
 import { createStackNavigator } from '@react-navigation/stack';
 import SignInScreen from '@/components/SignInScreen';
 import HomeScreen from '@/components/HomeScreen';
-import Region from '@/components/Region';
 import Account from '@/components/Account';
+import Group from '@/components/Group';
+import LeaguePage from '@/components/LeaguePage';
 const Stack = createStackNavigator();
 export default function App() {
   return (
@@ -21,7 +22,14 @@ export default function App() {
           {(props: any) => <Account {...props} mode="new" />}
         </Stack.Screen>
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Logout' }} />
-        <Stack.Screen name="Region" component={Region} options={{ title: 'Home' }} />
+        <Stack.Screen name="Group" options={{ title: 'Home' }}
+          children={(props: any) => <Group {...props} mode="new" />}
+        />
+
+        <Stack.Screen name="LeaguesPage" options={{ title: 'Home' }}
+          children={(props: any) => <LeaguePage {...props} mode="new" />}
+        />
+
         <Stack.Screen name="Edit Account">
           {(props:any) => <Account {...props} mode="edit" />}
         </Stack.Screen>

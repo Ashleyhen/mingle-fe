@@ -8,9 +8,9 @@ import {loginApi}  from '@/api/UserApi';
 import { CredentialsDto, MingleUserDto } from '@/protos/protos/user_pb';
 import { green, grey, lightBlue, red } from '@mui/material/colors';
 import ErrorAlert from './ui/dialogBoxs/AlertPopup';
-import MingleUserInfo from './types/MingleUserInfo';
+import MingleUserInfo, { toMingleUserInfo } from './types/MingleUserInfo';
 import { AccountInfoCacheService } from './utility/CacheService';
-import { toMingleUserInfo } from './utility/Mapper';
+import { ErrorDetailResponse } from '@/protos/protos/ErrorDetailResponse_pb';
 
 
 export default function SignInScreen({ navigation }: { navigation: NavigationProp<any> }) {
@@ -18,8 +18,7 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [open, setOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('Unexpected error occurred. Please try again later.');
-  const [errorTitle, setErrorTitle] = useState('Error');
+  const [errorMsg, setErrorMsg] = useState(new ErrorDetailResponse());
   
   const navigateToCreateAccount = ()=>navigation.navigate('New Account');
   const handleLogin = () => {
@@ -33,10 +32,10 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
         AccountInfoCacheService.set(mingleUserInfo); // Cache the data
         navigation.navigate("Home")
       },
-      error: (err) => {
+      error: (err:ErrorDetailResponse) => {
         setOpen(true);
-        setErrorTitle("Unauthorized");
-        setErrorMsg(err.message + " error occured. please try again later");
+        console.error('Login failed:', err);
+        setErrorMsg(err);
       },
     });
   };
@@ -59,7 +58,7 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
           onChangeText={setPassword}
         />
         <Button title="Login" onPress={handleLogin} />
-        <ErrorAlert open={open} setOpen={setOpen} errorMessage={errorMsg} errorTitle={errorTitle}></ErrorAlert>
+        <ErrorAlert open={open} setOpen={setOpen} errorResponse={errorMsg}></ErrorAlert>
         <View style={styles.separatorContainer}>
           <View style={styles.line} />
           <Text style={styles.separatorText}>or</Text>

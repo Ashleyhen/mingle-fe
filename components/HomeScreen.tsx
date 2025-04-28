@@ -133,27 +133,23 @@ export default function HomeScreen({
             {
               text: "Groups",
               icon: <Groups2TwoToneIcon />,
-              run: () => console.log("group clicked"),
+              run: () => navigation.navigate("Group"),
             },
             {
               text: "Region",
               icon: <LocationOnTwoToneIcon />,
-              run: () => navigation.navigate("Region"),
+              run: () => console.log("Region clicked"),
             },
             {
-              text: "Logout",
-              icon: <LogoutIcon />,
-              run: () => console.log("Logout clicked"),
-            },
-            {
-              text: "Events",
+              text: "Leagues",
               icon: <EventIcon />,
-              run: () => console.log("Events clicked"),
+              run: () =>navigation.navigate("LeaguesPage"),
             },
+
           ].map((item, index) => (
             <ListItem
               key={index}
-              onClick={() => handleClick(index, item.run)}
+              onClick={() => handleClick(index, ()=>setTimeout(()=>item.run(),500))}
               sx={onHover(clickedIndex === index)}
             >
               <ListItemIcon sx={hoverColor(clickedIndex === index)}>
