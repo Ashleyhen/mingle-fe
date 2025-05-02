@@ -19,8 +19,10 @@ enum Relationship {
     COED='COED',EXCLUSIVE='EXCLUSIVE'
   }
   
-import { MingleUserDto } from '@/protos/protos/user_pb';
   import dayjs, { Dayjs } from 'dayjs';
+import { toDaysJs, dateToString } from '../utility/MingleFormat';
+import { MingleGroupDto, MingleUserDto } from '@/protos/protos/mingle_pb';
+import MingleGroupInfo, { toMingleGroupInfo } from './MingleGroupInfo';
   
   type MingleUserInfo ={
     id?: number; // Not nullable
@@ -38,6 +40,7 @@ import { MingleUserDto } from '@/protos/protos/user_pb';
     skill?: Skill; // Enum
     birthday?: Dayjs; // Enum
     sporttype?: SportType; // Enum
+    mingleGroup: MingleGroupInfo[]; // One-to-Many relationship
   }
 export const toMingleUserInfo = (response:MingleUserDto)=>{
       return {
@@ -45,7 +48,7 @@ export const toMingleUserInfo = (response:MingleUserDto)=>{
           email: response.getEmail(),
           password: response.getPassword(),
           image: Uint8Array.from(atob(response.getImage_asB64()), c => c.charCodeAt(0)),
-          birthday: birthdayToDaysJs(response.getBirthday()),
+          birthday: toDaysJs(response.getBirthday()),
           bio: response.getBio(),
           firstname: response.getFirstname(),
           lastname: response.getLastname(),
@@ -56,6 +59,9 @@ export const toMingleUserInfo = (response:MingleUserDto)=>{
           skill: response.getSkill(),
           sporttype: response.getSporttype(),
           gender: response.getGender(),
+          mingleGroup: response.getMinglegroupdtoList().map((group: MingleGroupDto) =>
+            toMingleGroupInfo(group) // Convert each MingleGroupDto to MingleGroupInfo
+          )
         } as  MingleUserInfo;
   }
 
@@ -79,16 +85,8 @@ export const toMingleUserDto = (response:MingleUserInfo)=>{
     mingleUserDto.setGender(response.gender || "");
     mingleUserDto.setSporttype(response.sporttype || "");
     mingleUserDto.setSkill(response.skill || "");
-    mingleUserDto.setBirthday(response.birthday ? birthdayToString(response.birthday) : "");
+    mingleUserDto.setBirthday(response.birthday ? dateToString(response.birthday) : "");
     return mingleUserDto;
   }
-export const birthdayToString = (date: Dayjs): string => {
-    return date.format("MM-DD-YYYY"); // Format as MM-DD-YYYY
-};
-
-export const birthdayToDaysJs = (dateString: string): Dayjs => {
-  return dayjs(dateString, "MM-DD-YYYY"); // Parse the date string using the specified format
-};
-
   export default MingleUserInfo;
   export { Relationship, Skill, Gender,SportType};

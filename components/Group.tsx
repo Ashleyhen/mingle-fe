@@ -1,20 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import { Box, Typography, TextField, Button, Grid, Paper, IconButton } from "@mui/material";
 import { useForm, Controller, set } from "react-hook-form";
 import {launchImageLibraryAsync, MediaType}  from "expo-image-picker";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { MingleGroupDto } from "@/protos/protos/group_pb";
 import MingleGroupInfo, { toMingleGroupDto } from "./types/MingleGroupInfo";
 import { group } from "console";
 import { createGroupApi } from "@/api/GroupApi";
 import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
 import ErrorAlert from "./ui/dialogBoxs/AlertPopup";
-import { AccountInfoCacheService } from "./utility/CacheService";
+import { MingleCacheService } from "./utility/CacheService";
 import { NavigationProp } from "@react-navigation/native";
 import { Mode } from "@/constants/State";
 
 import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { MingleGroupDto, MingleUserDto } from "@/protos/protos/mingle_pb";
+import MingleUserInfo, { toMingleUserDto, toMingleUserInfo } from "./types/MingleUserInfo";
 
 
 export default function Group({
@@ -31,24 +32,29 @@ export default function Group({
   const [photos, setPhotos] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = React.useState( new ErrorDetailResponse());
   const [openErr, setOpenErr] = React.useState(false);
-  
+
+  let mingleUserDto:MingleUserDto
+  useEffect(() => {
+    mingleUserDto = MingleCacheService.get() ;
+  },[])
 
   const onSubmit = (data: MingleGroupInfo) => {
     const mingleGroupDto=toMingleGroupDto(data);
-    const accountId = AccountInfoCacheService.get().id ?? 0; // Provide a default value
-    mingleGroupDto.setId(accountId);
-    createGroupApi(mingleGroupDto)
-    .subscribe({
-        next: (response:MingleGroupDto) => {
-            console.log("Group created successfully:", response);
-            navigation.navigate("EventsPage");
+    mingleGroupDto.setOrganizer(mingleUserDto)
 
+    createGroupApi(mingleGroupDto).subscribe({
+        next: (response:MingleGroupDto) => {
+            MingleCacheService.set(response.getOrganizer() as MingleUserDto); 
+            console.log("Group created successfully:", response);
+            navigation.navigate("LeaguesPage");
+            
         },
         error: (error:ErrorDetailResponse) => {
             console.error("Error creating group:", error);
             setErrorMsg(error);
             setOpenErr(true);
-        }});
+        }}
+      );
     }
   
 
@@ -67,6 +73,7 @@ export default function Group({
   const removePhoto = (index: number) => {
     setPhotos((prevPhotos) => prevPhotos.filter((_, i) => i !== index));
   };
+
 
   return (
 

@@ -17,11 +17,8 @@ import MingleUserInfo, {
   SportType,
   Relationship,
   Skill,
-  birthdayToString,
-  toMingleUserInfo,
   toMingleUserDto,
 } from "./types/MingleUserInfo"; // Adjusted the path to match the correct location
-import { MingleUserDto, SuccessMsg } from "@/protos/protos/user_pb";
 import ErrorAlert from "./ui/dialogBoxs/AlertPopup";
 import { get } from "http";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -29,11 +26,14 @@ import dayjs, { Dayjs } from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { AccountInfoCacheService } from "./utility/CacheService";
+import { MingleCacheService } from "./utility/CacheService";
 import { parse } from "path";
 import { waitForDebugger } from "inspector";
 import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
 import { Mode } from "@/constants/State";
+import { dateToString } from "./utility/MingleFormat";
+import { MingleUserDto, SuccessMsg } from "@/protos/protos/mingle_pb";
+
 
 export default function Account({
   navigation,
@@ -45,6 +45,7 @@ export default function Account({
   const [open, setOpen] = React.useState(false);
   const [openErr, setOpenErr] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState( new ErrorDetailResponse());
+  let mingleId;
 
   const {
     handleSubmit,
@@ -78,16 +79,15 @@ export default function Account({
     mingleUserDto.setGender(mingleUserInfo.gender ?? "");
     mingleUserDto.setSporttype(mingleUserInfo.sporttype ?? "");
     mingleUserDto.setSkill(mingleUserInfo.skill ?? "");
+
     mingleUserDto.setBirthday(
-      mingleUserInfo.birthday ? birthdayToString(mingleUserInfo.birthday) : ""
+      mingleUserInfo.birthday ? dateToString(mingleUserInfo.birthday) : ""
         
     );
     createAccountApi(mingleUserDto).subscribe({
-      next: (response: SuccessMsg) => {
+      next: (response: MingleUserDto) => {
+        MingleCacheService.set(response);
         navigation.navigate("Home");
-        mingleUserInfo.id = Number.parseInt(response.getMessage());
-        const mingleUserinfo = toMingleUserInfo(mingleUserDto); // Convert to MingleUserInfo
-        AccountInfoCacheService.set(mingleUserinfo);
       },
       error: (errorDetailResponse:ErrorDetailResponse) => {
         console.error("failed", errorDetailResponse);
@@ -102,14 +102,16 @@ export default function Account({
       return;
     } else {
 
-      const mingleUserInfo = getValues();
-      const mingleUserCache = AccountInfoCacheService.get();
-      mingleUserInfo.id = mingleUserCache.id;
+      const updatedMingleUserAccount = getValues();
+
+      const accountInfo=MingleCacheService.get();
+      updatedMingleUserAccount.id=accountInfo.getId()
+      
       console.log(control._formValues);
-      editAccountApi(toMingleUserDto(mingleUserInfo)).subscribe({
-        next: (response: SuccessMsg) => {
-          console.log("Account updated successfully:", response.getMessage());
-          AccountInfoCacheService.set(mingleUserInfo);
+
+      editAccountApi(toMingleUserDto(updatedMingleUserAccount)).subscribe({
+        next: (mingleUserDto: MingleUserDto) => {
+          MingleCacheService.set(mingleUserDto);
           navigation.navigate("Home");
         },
         error: (err:ErrorDetailResponse) => {
@@ -184,21 +186,21 @@ export default function Account({
 
   useEffect(() => {
     if (mode === "edit") {
-      const accountInfo = AccountInfoCacheService.get();
-      console.log(accountInfo);
-      control._formValues.bio = accountInfo.bio ?? "";
-      control._formValues.image = accountInfo.image ?? new Uint8Array(0);
-      control._formValues.firstname = accountInfo.firstname ?? "";
-      control._formValues.lastname = accountInfo.lastname ?? "";
-      control._formValues.username = accountInfo.username ?? "";
-      control._formValues.zip = accountInfo.zip ?? "";
-      control._formValues.email = accountInfo.email ?? "";
-      control._formValues.phone = accountInfo.phone ?? "";
-      control._formValues.relationship = accountInfo.relationship ?? "";
-      control._formValues.gender = accountInfo.gender ?? "";
-      control._formValues.sporttype = accountInfo.sporttype ?? "";
-      control._formValues.skill = accountInfo.skill ?? "";
-      control._formValues.birthday = accountInfo.birthday ? dayjs(accountInfo.birthday) : null;
+      const accountInfo=MingleCacheService.get();
+      control._formValues.bio = accountInfo.getBio() ?? "";
+      control._formValues.image = accountInfo.getImage() ?? new Uint8Array(0);
+      control._formValues.firstname = accountInfo.getFirstname() ?? "";
+      control._formValues.lastname = accountInfo.getLastname() ?? "";
+      control._formValues.username = accountInfo.getUsername() ?? "";
+      control._formValues.zip = accountInfo.getZip() ?? "";
+      control._formValues.email = accountInfo.getEmail() ?? "";
+      control._formValues.phone = accountInfo.getPhone() ?? "";
+      control._formValues.relationship = accountInfo.getRelationship() ?? "";
+      control._formValues.gender = accountInfo.getGender() ?? "";
+      control._formValues.sporttype = accountInfo.getSporttype() ?? "";
+      control._formValues.skill = accountInfo.getSkill() ?? "";
+      control._formValues.birthday = accountInfo.getBirthday() ? dayjs(accountInfo.getBirthday()) : null;
+      mingleId = accountInfo.getId();
     }
   }, [mode, control]);
 

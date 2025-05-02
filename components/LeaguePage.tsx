@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -7,76 +7,82 @@ import {
   Grid,
   Paper,
   MenuItem,
-  IconButton,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
-import { useForm, Controller } from "react-hook-form";
-import * as ImagePicker from "expo-image-picker";
-import dayjs, { Dayjs } from "dayjs";
+import { useForm, Controller, set } from "react-hook-form";
 import { ScrollView, View } from "react-native";
-import { LeaguesForm, LocationForm, TimeSlot } from "./types/LeaguesType";
+import { LeaguesForm, LocationForm, toMingleGroupDto } from "./types/MingleGroupInfo";
+import { MingleCacheService } from "./utility/CacheService";
+import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
+import { on } from "events";
+import ErrorAlert from "./ui/dialogBoxs/AlertPopup";
+import {   toYYYYMMDD } from "./utility/MingleFormat";
+import { NavigationProp } from "@react-navigation/native";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider/LocalizationProvider";
+import { MingleGroupDto, MingleId, MingleLeagueDto, MingleUserDto } from "@/protos/protos/mingle_pb";
+import { createLeagueApi } from "@/api/leagueApi";
+import { findAllGroupsByUserId } from "@/api/GroupApi";
+import MingleUserInfo from "./types/MingleUserInfo";
 
-
-
-
-
-
-
-export default function LeaguePage() {
+export default function LeaguePage({
+  navigation,
+}: {
+  navigation: NavigationProp<any>;
+}){
   const { control, handleSubmit, reset, formState: { errors, isValid } } = useForm<LeaguesForm>({
     mode: "onBlur",
   });
-    
-  const [locations, setLocations] = useState<LocationForm[]>([]);
 
-  const locationForm = useForm<LocationForm>({
-    mode: "onBlur",
-  });
+  const [openErr, setOpenErr] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState( new ErrorDetailResponse());
+  const [groupList, setGroupList] = useState<Array<MingleGroupDto>>(new Array<MingleGroupDto>());
+  const [mingleUserDto, setMingleUserDto] = useState<MingleUserDto>();
 
-  const { control: locationControl, handleSubmit: handleLocationSubmit } = locationForm;
-
-  const onSubmit = (data: LeaguesForm) => {
-    console.log("Form Data:", { ...data, locations });
-    alert("Event created successfully!");
-    reset();
-    setLocations([]);
-  };
-
-  const resetLocation = () => {
-    // Add logic to reset location form fields if needed
-    console.log("Resetting location form fields");
-  };
-
-  const addLocation = (data: LocationForm) => {
-    setLocations((prevLocations) => [...prevLocations, { ...data, photos: [], times: [] }]);
-    resetLocation();
-  };
-
-  const addTimeSlot = (locationIndex: number, timeSlot: TimeSlot) => {
-    setLocations((prevLocations) => {
-      const updatedLocations = [...prevLocations];
-      updatedLocations[locationIndex].times.push(timeSlot);
-      return updatedLocations;
-    });
-  };
-const removeTimeSlot = (locationIndex: number, timeIndex: number) => {
-    setLocations((prevLocations) => {
-      const updatedLocations = [...prevLocations];
-      updatedLocations[locationIndex].times = updatedLocations[locationIndex].times.filter(
-        (_, i) => i !== timeIndex
-      );
-      return updatedLocations;
-    });
-
-  };
   
 
-  return (
+  useEffect(() => {
+    const userDto = MingleCacheService.get(); // Retrieve the data
+    console.log("MingleUserDto from MingleCacheService.get()", userDto);
+    if (userDto) {
+        setMingleUserDto(userDto); // Update state
+        setGroupList(userDto.getMinglegroupdtoList() as Array<MingleGroupDto> || []);
+    } else {
+        console.warn("MingleUserDto is undefined. Check localStorage data.");
+    }
+}, []);
+
+  
+  const onSubmit = (leaguesForm: LeaguesForm) => {
+    const mingleLeagueDto=new MingleLeagueDto();
+    mingleLeagueDto.setEventname(leaguesForm.eventName);
+    mingleLeagueDto.setStartdate(toYYYYMMDD(leaguesForm.startDate));
+    mingleLeagueDto.setEnddate(toYYYYMMDD(leaguesForm.endDate));  
+    mingleLeagueDto.setRegistrationenddate(toYYYYMMDD(leaguesForm.registrationEndDate));
+    mingleLeagueDto.setPriceperplayer(leaguesForm.pricePerPlayer);  
+    mingleLeagueDto.setDescription(leaguesForm.description);
+    mingleLeagueDto.setDuration(leaguesForm.duration);
+    mingleLeagueDto.setPlayersperteam(leaguesForm.playersPerTeam);
+    mingleLeagueDto.setMinglegroupdto(new MingleGroupDto().setId(leaguesForm.mingleGroupInfo.id) as MingleGroupDto);
+
+    let mingleGroupDto:MingleGroupDto=mingleUserDto?.getMinglegroupdtoList()
+    .find((group)=> group.getId()=== leaguesForm.mingleGroupInfo.id) as MingleGroupDto;
+      mingleGroupDto.addMingleleaguedto(mingleLeagueDto);
+      
+    console.log("sending MingleLeagueDto", mingleLeagueDto);
+    createLeagueApi(mingleLeagueDto).subscribe({
+      next: (mingleLeagueDto:MingleLeagueDto) => {
+        MingleCacheService
+        .set(mingleUserDto as MingleUserDto);
+        navigation.navigate("LocationPage");
+      },
+      error: (error:ErrorDetailResponse) => {
+        console.error("Error creating league:", error);
+        setOpenErr(true);
+        setErrorMsg(error);
+      },
+    })
+  };
+
+    return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <Box
         sx={{
@@ -152,6 +158,26 @@ const removeTimeSlot = (locationIndex: number, timeIndex: number) => {
                     InputLabelProps={{ shrink: true }}
                     error={!!error}
                     helperText={error?.message}
+                    
+                  />
+                )}
+              />
+
+              {/* End Date */}
+              <Controller
+                control={control}
+                name="registrationEndDate"
+                rules={{ required: "End date is required" }}
+                render={({ field, fieldState: { error } }) => (
+                  <TextField
+                    {...field}
+                    label="Last day to register"
+                    type="date"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    error={!!error}
+                    helperText={error?.message}
+                    
                   />
                 )}
               />
@@ -214,6 +240,29 @@ const removeTimeSlot = (locationIndex: number, timeIndex: number) => {
                 )}
               />
 
+              {/* Group Selection */}
+              <Controller
+                control={control}
+                name="mingleGroupInfo.id"
+                defaultValue={groupList.length > 0 ? groupList[0].getId() : 0} // Provide a default value
+                rules={{ required: "Please select a group" }}
+                render={({ field, fieldState: { error } }) => (
+                  <TextField
+                    {...field}
+                    select
+                    label="Select Group"
+                    fullWidth
+                    error={!!error}
+                    helperText={error?.message}
+                  >
+                    { groupList.map((group) => (
+                      <MenuItem key={group.getId()} value={group.getId()}>
+                        {group.getGroupname()+" - "+group.getZip()}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
 
               {/* Players Per Team */}
               <Controller
@@ -229,7 +278,7 @@ const removeTimeSlot = (locationIndex: number, timeIndex: number) => {
                     error={!!error}
                     helperText={error?.message}
                   >
-                    {[2, 4, 6].map((value) => (
+                    {["2", "4", "6","any"].map((value) => (
                       <MenuItem key={value} value={value}>
                         {value}
                       </MenuItem>
@@ -237,214 +286,6 @@ const removeTimeSlot = (locationIndex: number, timeIndex: number) => {
                   </TextField>
                 )}
               />
-              {/* Add Location Section */}
-              <Typography variant="h6" gutterBottom>
-                Add Location
-              </Typography>
-              <Grid container spacing={2}>
-                <Controller
-                  control={locationControl}
-                  name="hostEmail"
-                  rules={{ required: "Host email is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Host Email"
-                      placeholder="Enter host email"
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={locationControl}
-                  name="hostName"
-                  rules={{ required: "Host name is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Host Name"
-                      placeholder="Enter host name"
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={locationControl}
-                  name="locationAddress"
-                  rules={{ required: "Location address is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Location Address"
-                      placeholder="Enter location address"
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={locationControl}
-                  name="zipCode"
-                  rules={{ required: "Zip code is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Zip Code"
-                      placeholder="Enter zip code"
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={locationControl}
-                  name="name"
-                  rules={{ required: "Location name is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Location Name"
-                      placeholder="Enter location name"
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={locationControl}
-                  name="description"
-                  rules={{ required: "Description is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Description"
-                      placeholder="Enter location description"
-                      fullWidth
-                      multiline
-                      rows={2}
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                  <Button
-                    variant="contained"
-                    onClick={handleLocationSubmit(addLocation)}
-                    fullWidth
-                  >
-                    Add Location
-                  </Button>
-              </Grid>
-
-              {/* Display Added Locations */}
-              <Typography variant="h6" gutterBottom>
-                Added Locations
-              </Typography>
-              {locations.map((location, locationIndex) => (
-                <Accordion key={locationIndex}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography>{location.name}</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography>
-                      <strong>Address:</strong> {location.locationAddress}
-                    </Typography>
-                    <Typography>
-                      <strong>Description:</strong> {location.description}
-                    </Typography>
-
-{/* Add Time Slot */}
-                    <Typography variant="h6" gutterBottom>
-                      Add Time Slot
-                    </Typography>
-                    <Grid container spacing={2}>
-                        <TextField
-                          label="Day"
-                          select
-                          fullWidth
-                          value={location.newTimeSlot?.day || ""}
-                          onChange={(e) =>
-                            setLocations((prevLocations) => {
-                              const updatedLocations = [...prevLocations];
-                              updatedLocations[locationIndex].newTimeSlot = {
-                                ...updatedLocations[locationIndex].newTimeSlot,
-                                day: e.target.value || "",
-                                startTime: updatedLocations[locationIndex].newTimeSlot?.startTime || "",
-                                endTime: updatedLocations[locationIndex].newTimeSlot?.endTime || "",
-                              } as TimeSlot;
-                              updatedLocations[locationIndex].newTimeSlot.day = updatedLocations[locationIndex].newTimeSlot.day || "Monday";
-                              updatedLocations[locationIndex].newTimeSlot.day = updatedLocations[locationIndex].newTimeSlot.day || "Monday";
-                              return updatedLocations;
-                            })
-                          }
-                        >
-                          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(
-                            (day) => (
-                              <MenuItem key={day} value={day}>
-                                {day}
-                              </MenuItem>
-                            )
-                          )}
-                        </TextField>
-                        <TextField
-                          label="Start Time"
-                          type="time"
-                          fullWidth
-                          value={location.newTimeSlot?.startTime || ""}
-                          onChange={(e) =>
-                            setLocations((prevLocations) => {
-                              const updatedLocations = [...prevLocations];
-                              updatedLocations[locationIndex].newTimeSlot = {
-                                ...updatedLocations[locationIndex].newTimeSlot,
-                                startTime: e.target.value,
-                              };
-                              return updatedLocations;
-                            })
-                          }
-                        />
-                        <TextField
-                          label="End Time"
-                          type="time"
-                          fullWidth
-                          value={location.newTimeSlot?.endTime || ""}
-                          onChange={(e) =>
-                            setLocations((prevLocations) => {
-                              const updatedLocations = [...prevLocations];
-                              updatedLocations[locationIndex].newTimeSlot = {
-                                ...updatedLocations[locationIndex].newTimeSlot,
-                                endTime: e.target.value,
-                              };
-                              return updatedLocations;
-                            })
-                          }
-                        />
-                    </Grid>
-                    <Typography variant="h6" gutterBottom>
-                      Time Slots
-                    </Typography>
-                    {location.times.map((time, timeIndex) => (
-                      <Box key={timeIndex} sx={{ marginBottom: 2 }}>
-                        <Typography>
-                          <strong>{time.day}</strong>: {time.startTime} - {time.endTime}
-                        </Typography>
-                        <IconButton
-                          size="small"
-                          onClick={() => removeTimeSlot(locationIndex, timeIndex)}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    ))}
-                  </AccordionDetails>
-                </Accordion>
-              ))}
 
               {/* Submit Button */}
               <Button
@@ -460,6 +301,11 @@ const removeTimeSlot = (locationIndex: number, timeIndex: number) => {
           </form>
         </Paper>
       </Box>
+      <ErrorAlert
+        open={openErr}
+        setOpen={setOpenErr}
+        errorResponse={errorMsg}
+      ></ErrorAlert>
     </ScrollView>
   );
 }

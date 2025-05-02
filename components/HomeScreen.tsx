@@ -26,7 +26,8 @@ import EventIcon from "@mui/icons-material/Event";
 import { useState } from "react";
 import { NavigationProp } from "@react-navigation/native";
 
-export default function HomeScreen({
+export default function HomeScreen
+({
   navigation,
 }: {
   navigation: NavigationProp<any>;
@@ -136,9 +137,9 @@ export default function HomeScreen({
               run: () => navigation.navigate("Group"),
             },
             {
-              text: "Region",
+              text: "Location",
               icon: <LocationOnTwoToneIcon />,
-              run: () => console.log("Region clicked"),
+              run: () => navigation.navigate("LocationPage"),
             },
             {
               text: "Leagues",

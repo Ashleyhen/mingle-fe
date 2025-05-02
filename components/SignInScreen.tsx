@@ -5,12 +5,12 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
 import {loginApi}  from '@/api/UserApi';
-import { CredentialsDto, MingleUserDto } from '@/protos/protos/user_pb';
 import { green, grey, lightBlue, red } from '@mui/material/colors';
 import ErrorAlert from './ui/dialogBoxs/AlertPopup';
 import MingleUserInfo, { toMingleUserInfo } from './types/MingleUserInfo';
-import { AccountInfoCacheService } from './utility/CacheService';
+import { MingleCacheService } from './utility/CacheService';
 import { ErrorDetailResponse } from '@/protos/protos/ErrorDetailResponse_pb';
+import { CredentialsDto } from '@/protos/protos/mingle_pb';
 
 
 export default function SignInScreen({ navigation }: { navigation: NavigationProp<any> }) {
@@ -28,8 +28,7 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
     loginApi(credentials).subscribe({
       next: (response) => {
         console.log('Login successful:', response);
-        const mingleUserInfo =toMingleUserInfo(response); // Convert to MingleUserInfo
-        AccountInfoCacheService.set(mingleUserInfo); // Cache the data
+        MingleCacheService.set(response); // Cache the data
         navigation.navigate("Home")
       },
       error: (err:ErrorDetailResponse) => {
