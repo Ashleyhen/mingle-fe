@@ -1,25 +1,34 @@
-import { GroupCreatedResponse, MingleGroupDto } from "@/protos/protos/group_pb";
-import { GroupGrpcClient } from "@/protos/protos/GroupServiceClientPb";
 import * as grpcWeb from "grpc-web";
-import { handleResult } from "./ErrorHandler";
 import { Observable, Subscriber } from "rxjs";
-import { GRPC_HOST } from '@env';
+import { handleResult } from "./ErrorHandler";
+import { GroupGrpcClient } from "@/protos/protos/MingleServiceClientPb";
+import { ListMingleGroupDto, MingleGroupDto, MingleId } from "@/protos/protos/mingle_pb";
+import { baseUrl } from "@/constants/env";
 
-const url=`${GRPC_HOST}`
-const client = new GroupGrpcClient(url); // Envoy proxy URL
+const client = new GroupGrpcClient(baseUrl); // Envoy proxy URL
 
 const createGroupApi = (mingleGroupDto: MingleGroupDto): Observable<MingleGroupDto> => {
   return new Observable((subscriber) => {
-    client.createGroup(mingleGroupDto, {}, (err: grpcWeb.RpcError, response: GroupCreatedResponse) => 
+    client.createGroup(mingleGroupDto, {}, (err: grpcWeb.RpcError, response: MingleId) => 
        handleResult(err, response, subscriber))
   });
 }
 
 const editGroupApi = (mingleGroupDto: MingleGroupDto): Observable<MingleGroupDto> => {
   return new Observable((subscriber) => {
-    client.createGroup(mingleGroupDto, {}, (err: grpcWeb.RpcError, response: GroupCreatedResponse) => 
+    client.createGroup(mingleGroupDto, {}, (err: grpcWeb.RpcError, response: MingleId) => 
        handleResult(err, response, subscriber))
   });
 }
 
-export {createGroupApi,editGroupApi} ;
+const findAllGroupsByUserId = (mingleUserId: MingleId): Observable<ListMingleGroupDto> => {
+  return new Observable((subscriber) => {
+    client.findAllGroupsByUserId(mingleUserId, {}, (err: grpcWeb.RpcError, response: ListMingleGroupDto) => 
+       handleResult(err, response, subscriber))
+  });
+
+}
+
+
+
+export {createGroupApi,editGroupApi,findAllGroupsByUserId} ;

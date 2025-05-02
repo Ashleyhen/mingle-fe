@@ -10,9 +10,7 @@ export const handleResult= <T>(err: grpcWeb.RpcError, response: T, subscriber:Su
         // Step 1: Base64 decode
         const decodedBinary = Buffer.from(err.message, 'base64');
                 // Step 2: Deserialize rpc.Status
-        console.log("Decoded binary:", decodedBinary);
         const errorDetailResponse = ErrorDetailResponse.deserializeBinary(decodedBinary);
-        console.log("Decoded status:", errorDetailResponse.toObject());
         subscriber.error(errorDetailResponse); // Emit the error to the Observable
 
       } else {

@@ -4,11 +4,10 @@
     {
       "name": "Debug Expo App",
       "request": "launch",
-      "type": "node",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start"],
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen"
+      "cwd": "${workspaceFolder}",
+      "type": "reactnative",
+      "sourceMaps": true,
+      "platform": "expoweb"
     }
   ]
 }

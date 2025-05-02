@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -7,91 +7,82 @@ import {
   Grid,
   Paper,
   MenuItem,
-  IconButton,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
-import { useForm, Controller } from "react-hook-form";
-import * as ImagePicker from "expo-image-picker";
-import dayjs, { Dayjs } from "dayjs";
-import { ScrollView } from "react-native";
+import { useForm, Controller, set } from "react-hook-form";
+import { ScrollView, View } from "react-native";
+import { LeaguesForm, LocationForm, toMingleGroupDto } from "./types/MingleGroupInfo";
+import { MingleCacheService } from "./utility/CacheService";
+import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
+import { on } from "events";
+import ErrorAlert from "./ui/dialogBoxs/AlertPopup";
+import {   toYYYYMMDD } from "./utility/MingleFormat";
+import { NavigationProp } from "@react-navigation/native";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider/LocalizationProvider";
+import { MingleGroupDto, MingleId, MingleLeagueDto, MingleUserDto } from "@/protos/protos/mingle_pb";
+import { createLeagueApi } from "@/api/leagueApi";
+import { findAllGroupsByUserId } from "@/api/GroupApi";
+import MingleUserInfo from "./types/MingleUserInfo";
 
-type LeaguesForm = {
-  eventName: string;
-  startDate: Dayjs;
-  endDate: Dayjs;
-  pricePerPlayer: number;
-  description: string;
-  playersPerTeam: number;
-};
-
-type LocationForm = {
-  hostEmail: string;
-  hostName: string;
-  locationAddress: string;
-  zipCode: string;
-  name: string;
-  description: string;
-  photos: string[];
-};
-
-export default function LeaguePage() {
+export default function LeaguePage({
+  navigation,
+}: {
+  navigation: NavigationProp<any>;
+}){
   const { control, handleSubmit, reset, formState: { errors, isValid } } = useForm<LeaguesForm>({
     mode: "onBlur",
   });
-  const { control: locationControl, handleSubmit: handleLocationSubmit, reset: resetLocation } = useForm<LocationForm>({
-    mode: "onBlur",
-  });
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [locations, setLocations] = useState<LocationForm[]>([]);
 
-  const onSubmit = (data: LeaguesForm) => {
-    console.log("Form Data:", { ...data, photos, locations });
-    alert("Event created successfully!");
-    reset();
-    setPhotos([]);
-    setLocations([]);
-  };
+  const [openErr, setOpenErr] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState( new ErrorDetailResponse());
+  const [groupList, setGroupList] = useState<Array<MingleGroupDto>>(new Array<MingleGroupDto>());
+  const [mingleUserDto, setMingleUserDto] = useState<MingleUserDto>();
 
-  const addLocation = (data: LocationForm) => {
-    setLocations((prevLocations) => [...prevLocations, { ...data, photos: [] }]);
-    resetLocation();
-  };
+  
 
-  const addLocationPhoto = async (index: number) => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setLocations((prevLocations) => {
-        const updatedLocations = [...prevLocations];
-        updatedLocations[index].photos = [
-          ...updatedLocations[index].photos,
-          result.assets[0].uri,
-        ];
-        return updatedLocations;
-      });
+  useEffect(() => {
+    const userDto = MingleCacheService.get(); // Retrieve the data
+    console.log("MingleUserDto from MingleCacheService.get()", userDto);
+    if (userDto) {
+        setMingleUserDto(userDto); // Update state
+        setGroupList(userDto.getMinglegroupdtoList() as Array<MingleGroupDto> || []);
+    } else {
+        console.warn("MingleUserDto is undefined. Check localStorage data.");
     }
+}, []);
+
+  
+  const onSubmit = (leaguesForm: LeaguesForm) => {
+    const mingleLeagueDto=new MingleLeagueDto();
+    mingleLeagueDto.setEventname(leaguesForm.eventName);
+    mingleLeagueDto.setStartdate(toYYYYMMDD(leaguesForm.startDate));
+    mingleLeagueDto.setEnddate(toYYYYMMDD(leaguesForm.endDate));  
+    mingleLeagueDto.setRegistrationenddate(toYYYYMMDD(leaguesForm.registrationEndDate));
+    mingleLeagueDto.setPriceperplayer(leaguesForm.pricePerPlayer);  
+    mingleLeagueDto.setDescription(leaguesForm.description);
+    mingleLeagueDto.setDuration(leaguesForm.duration);
+    mingleLeagueDto.setPlayersperteam(leaguesForm.playersPerTeam);
+    mingleLeagueDto.setMinglegroupdto(new MingleGroupDto().setId(leaguesForm.mingleGroupInfo.id) as MingleGroupDto);
+
+    let mingleGroupDto:MingleGroupDto=mingleUserDto?.getMinglegroupdtoList()
+    .find((group)=> group.getId()=== leaguesForm.mingleGroupInfo.id) as MingleGroupDto;
+      mingleGroupDto.addMingleleaguedto(mingleLeagueDto);
+      
+    console.log("sending MingleLeagueDto", mingleLeagueDto);
+    createLeagueApi(mingleLeagueDto).subscribe({
+      next: (mingleLeagueDto:MingleLeagueDto) => {
+        MingleCacheService
+        .set(mingleUserDto as MingleUserDto);
+        navigation.navigate("LocationPage");
+      },
+      error: (error:ErrorDetailResponse) => {
+        console.error("Error creating league:", error);
+        setOpenErr(true);
+        setErrorMsg(error);
+      },
+    })
   };
 
-  const removeLocationPhoto = (locationIndex: number, photoIndex: number) => {
-    setLocations((prevLocations) => {
-      const updatedLocations = [...prevLocations];
-      updatedLocations[locationIndex].photos = updatedLocations[locationIndex].photos.filter(
-        (_, i) => i !== photoIndex
-      );
-      return updatedLocations;
-    });
-  };
-
-  return (
+    return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <Box
         sx={{
@@ -167,6 +158,26 @@ export default function LeaguePage() {
                     InputLabelProps={{ shrink: true }}
                     error={!!error}
                     helperText={error?.message}
+                    
+                  />
+                )}
+              />
+
+              {/* End Date */}
+              <Controller
+                control={control}
+                name="registrationEndDate"
+                rules={{ required: "End date is required" }}
+                render={({ field, fieldState: { error } }) => (
+                  <TextField
+                    {...field}
+                    label="Last day to register"
+                    type="date"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    error={!!error}
+                    helperText={error?.message}
+                    
                   />
                 )}
               />
@@ -211,6 +222,48 @@ export default function LeaguePage() {
                 )}
               />
 
+              {/* Duration */}
+              <Controller
+                control={control}
+                name="duration"
+                rules={{ required: "Description is required" }}
+                render={({ field, fieldState: { error } }) => (
+                  <TextField
+                    {...field}
+                    label="Duration of each match"
+                    placeholder="Enter event description"
+                    fullWidth
+                    rows={4}
+                    error={!!error}
+                    helperText={error?.message}
+                  />
+                )}
+              />
+
+              {/* Group Selection */}
+              <Controller
+                control={control}
+                name="mingleGroupInfo.id"
+                defaultValue={groupList.length > 0 ? groupList[0].getId() : 0} // Provide a default value
+                rules={{ required: "Please select a group" }}
+                render={({ field, fieldState: { error } }) => (
+                  <TextField
+                    {...field}
+                    select
+                    label="Select Group"
+                    fullWidth
+                    error={!!error}
+                    helperText={error?.message}
+                  >
+                    { groupList.map((group) => (
+                      <MenuItem key={group.getId()} value={group.getId()}>
+                        {group.getGroupname()+" - "+group.getZip()}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
+
               {/* Players Per Team */}
               <Controller
                 control={control}
@@ -225,7 +278,7 @@ export default function LeaguePage() {
                     error={!!error}
                     helperText={error?.message}
                   >
-                    {[2, 4, 6].map((value) => (
+                    {["2", "4", "6","any"].map((value) => (
                       <MenuItem key={value} value={value}>
                         {value}
                       </MenuItem>
@@ -233,184 +286,6 @@ export default function LeaguePage() {
                   </TextField>
                 )}
               />
-              {/* Add Location Section */}
-              <Typography variant="h6" gutterBottom>
-                Add Location
-              </Typography>
-              <Grid container spacing={2}>
-                <Controller
-                  control={locationControl}
-                  name="hostEmail"
-                  rules={{ required: "Host email is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Host Email"
-                      placeholder="Enter host email"
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={locationControl}
-                  name="hostName"
-                  rules={{ required: "Host name is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Host Name"
-                      placeholder="Enter host name"
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={locationControl}
-                  name="locationAddress"
-                  rules={{ required: "Location address is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Location Address"
-                      placeholder="Enter location address"
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={locationControl}
-                  name="zipCode"
-                  rules={{ required: "Zip code is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Zip Code"
-                      placeholder="Enter zip code"
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={locationControl}
-                  name="name"
-                  rules={{ required: "Location name is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Location Name"
-                      placeholder="Enter location name"
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={locationControl}
-                  name="description"
-                  rules={{ required: "Description is required" }}
-                  render={({ field, fieldState: { error } }) => (
-                    <TextField
-                      {...field}
-                      label="Description"
-                      placeholder="Enter location description"
-                      fullWidth
-                      multiline
-                      rows={2}
-                      error={!!error}
-                      helperText={error?.message}
-                    />
-                  )}
-                />
-                  <Button
-                    variant="contained"
-                    onClick={handleLocationSubmit(addLocation)}
-                    fullWidth
-                  >
-                    Add Location
-                  </Button>
-              </Grid>
-
-              {/* Display Added Locations */}
-              <Typography variant="h6" gutterBottom>
-                Added Locations
-              </Typography>
-              {locations.map((location, index) => (
-                <Accordion key={index}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography>{location.name}</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography>
-                      <strong>Address:</strong> {location.locationAddress}
-                    </Typography>
-                    <Typography>
-                      <strong>Description:</strong> {location.description}
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      onClick={() => addLocationPhoto(index)}
-                      sx={{ marginTop: 2 }}
-                    >
-                      Upload Photos
-                    </Button>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 1,
-                        marginTop: 2,
-                      }}
-                    >
-                      {location.photos.map((photo, photoIndex) => (
-                        <Box
-                          key={photoIndex}
-                          sx={{
-                            position: "relative",
-                            width: 100,
-                            height: 100,
-                          }}
-                        >
-                          <Box
-                            component="img"
-                            src={photo}
-                            alt={`Photo ${photoIndex + 1}`}
-                            sx={{
-                              width: "100%",
-                              height: "100%",
-                              borderRadius: 1,
-                              objectFit: "cover",
-                            }}
-                          />
-                          <IconButton
-                            size="small"
-                            onClick={() => removeLocationPhoto(index, photoIndex)}
-                            sx={{
-                              position: "absolute",
-                              top: 0,
-                              right: 0,
-                              backgroundColor: "rgba(255, 255, 255, 0.8)",
-                              "&:hover": {
-                                backgroundColor: "rgba(255, 255, 255, 1)",
-                              },
-                            }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      ))}
-                    </Box>
-                  </AccordionDetails>
-                </Accordion>
-              ))}
 
               {/* Submit Button */}
               <Button
@@ -426,6 +301,11 @@ export default function LeaguePage() {
           </form>
         </Paper>
       </Box>
+      <ErrorAlert
+        open={openErr}
+        setOpen={setOpenErr}
+        errorResponse={errorMsg}
+      ></ErrorAlert>
     </ScrollView>
   );
 }

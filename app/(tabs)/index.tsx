@@ -11,6 +11,7 @@ import HomeScreen from '@/components/HomeScreen';
 import Account from '@/components/Account';
 import Group from '@/components/Group';
 import LeaguePage from '@/components/LeaguePage';
+import LocationPage from '@/components/LocationPage';
 const Stack = createStackNavigator();
 export default function App() {
   return (
@@ -25,6 +26,11 @@ export default function App() {
         <Stack.Screen name="Group" options={{ title: 'Home' }}
           children={(props: any) => <Group {...props} mode="new" />}
         />
+
+        <Stack.Screen name="LocationPage" options={{ title: 'Home' }}
+          children={(props: any) => <LocationPage {...props} mode="new" />}
+        />
+
 
         <Stack.Screen name="LeaguesPage" options={{ title: 'Home' }}
           children={(props: any) => <LeaguePage {...props} mode="new" />}
