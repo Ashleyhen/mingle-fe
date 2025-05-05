@@ -11,6 +11,7 @@ type MingleGroupInfo ={
   }
 
 export type LeaguesForm = {
+  id: number;
   eventName: string;
   startDate: string;
   endDate: string;
@@ -31,6 +32,8 @@ export type LocationForm = {
   name: string;
   description: string;
   photos: string[];
+  league: LeaguesForm;
+  mingleGroupInfo: MingleGroupInfo;
   times: TimeSlot[];
 };
 

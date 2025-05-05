@@ -33,6 +33,7 @@ import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
 import { Mode } from "@/constants/State";
 import { dateToString } from "./utility/MingleFormat";
 import { MingleUserDto, SuccessMsg } from "@/protos/protos/mingle_pb";
+import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
 
 
 export default function Account({
@@ -43,9 +44,7 @@ export default function Account({
   mode: Mode;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [openErr, setOpenErr] = React.useState(false);
-  const [errorMsg, setErrorMsg] = React.useState( new ErrorDetailResponse());
-  let mingleId;
+  const { showError } = useErrorAlert();
 
   const {
     handleSubmit,
@@ -91,8 +90,7 @@ export default function Account({
       },
       error: (errorDetailResponse:ErrorDetailResponse) => {
         console.error("failed", errorDetailResponse);
-        setOpenErr(true);
-          setErrorMsg(errorDetailResponse);
+        showError(errorDetailResponse);
       },
     });
   };
@@ -116,8 +114,7 @@ export default function Account({
         },
         error: (err:ErrorDetailResponse) => {
           console.info("failed", err);
-          setOpenErr(true);
-          setErrorMsg(err);
+          showError(err);
         },
       });
     }
@@ -200,7 +197,6 @@ export default function Account({
       control._formValues.sporttype = accountInfo.getSporttype() ?? "";
       control._formValues.skill = accountInfo.getSkill() ?? "";
       control._formValues.birthday = accountInfo.getBirthday() ? dayjs(accountInfo.getBirthday()) : null;
-      mingleId = accountInfo.getId();
     }
   }, [mode, control]);
 
@@ -550,11 +546,6 @@ export default function Account({
               {" "}
               Back
             </Button>
-            <ErrorAlert
-              open={openErr}
-              setOpen={setOpenErr}
-              errorResponse={errorMsg}
-            ></ErrorAlert>
           </WhiteBox>
         </Grid>
       </form>

@@ -3,28 +3,24 @@ import { Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography }
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { ErrorDetailResponse } from '@/protos/protos/ErrorDetailResponse_pb';
 
-type AlertPopUpProps = {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  errorResponse: ErrorDetailResponse; // Pass the error message as a prop
-};
+export default function ErrorAlert(props: ErrorDetailResponse) {
 
-export default function ErrorAlert(props: AlertPopUpProps) {
-  const { open, setOpen, errorResponse } = props;
+  const [open, setOpen] = React.useState(true);
 
   const handleClose = () => {
     setOpen(false);
   };
+  alert(props.getTitle())
 
   return (
     <div>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <ErrorOutlineIcon color="error" />
-          {errorResponse.getTitle()}
+          {props.getTitle()}
         </DialogTitle>
         <DialogContent>
-          <Typography>{errorResponse.getDescription()}</Typography>
+          <Typography>{props.getDescription()}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="error" variant="contained">

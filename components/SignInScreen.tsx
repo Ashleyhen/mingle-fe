@@ -6,20 +6,18 @@ import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
 import {loginApi}  from '@/api/UserApi';
 import { green, grey, lightBlue, red } from '@mui/material/colors';
-import ErrorAlert from './ui/dialogBoxs/AlertPopup';
-import MingleUserInfo, { toMingleUserInfo } from './types/MingleUserInfo';
 import { MingleCacheService } from './utility/CacheService';
 import { ErrorDetailResponse } from '@/protos/protos/ErrorDetailResponse_pb';
 import { CredentialsDto } from '@/protos/protos/mingle_pb';
+import { useErrorAlert } from './ui/dialogBoxs/ErrorAlertContext';
 
 
 export default function SignInScreen({ navigation }: { navigation: NavigationProp<any> }) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [open, setOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(new ErrorDetailResponse());
   
+  const { showError } = useErrorAlert();
   const navigateToCreateAccount = ()=>navigation.navigate('New Account');
   const handleLogin = () => {
     const credentials= new CredentialsDto();
@@ -32,9 +30,8 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
         navigation.navigate("Home")
       },
       error: (err:ErrorDetailResponse) => {
-        setOpen(true);
         console.error('Login failed:', err);
-        setErrorMsg(err);
+        showError(err);
       },
     });
   };
@@ -57,7 +54,6 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
           onChangeText={setPassword}
         />
         <Button title="Login" onPress={handleLogin} />
-        <ErrorAlert open={open} setOpen={setOpen} errorResponse={errorMsg}></ErrorAlert>
         <View style={styles.separatorContainer}>
           <View style={styles.line} />
           <Text style={styles.separatorText}>or</Text>

@@ -16,6 +16,7 @@ import { Mode } from "@/constants/State";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { MingleGroupDto, MingleUserDto } from "@/protos/protos/mingle_pb";
 import MingleUserInfo, { toMingleUserDto, toMingleUserInfo } from "./types/MingleUserInfo";
+import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
 
 
 export default function Group({
@@ -26,12 +27,10 @@ export default function Group({
   mode: Mode;
 }) {
   const { control, handleSubmit, reset, formState: { isValid } } = useForm<MingleGroupInfo>({
-
     mode: "onChange",
   });
+  const { showError } = useErrorAlert();
   const [photos, setPhotos] = useState<string[]>([]);
-  const [errorMsg, setErrorMsg] = React.useState( new ErrorDetailResponse());
-  const [openErr, setOpenErr] = React.useState(false);
 
   let mingleUserDto:MingleUserDto
   useEffect(() => {
@@ -51,8 +50,7 @@ export default function Group({
         },
         error: (error:ErrorDetailResponse) => {
             console.error("Error creating group:", error);
-            setErrorMsg(error);
-            setOpenErr(true);
+            showError(error);
         }}
       );
     }
@@ -229,11 +227,6 @@ export default function Group({
               Create Group
             </Button>
           </Grid>
-            <ErrorAlert
-              open={openErr}
-              setOpen={setOpenErr}
-              errorResponse={errorMsg}
-            ></ErrorAlert>
         </form>
       </Paper>
     </Box>
