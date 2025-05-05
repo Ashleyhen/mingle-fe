@@ -17,8 +17,6 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [open, setOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(new ErrorDetailResponse());
   
   const navigateToCreateAccount = ()=>navigation.navigate('New Account');
   const handleLogin = () => {
@@ -32,9 +30,8 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
         navigation.navigate("Home")
       },
       error: (err:ErrorDetailResponse) => {
-        setOpen(true);
         console.error('Login failed:', err);
-        setErrorMsg(err);
+        ErrorAlert(err);
       },
     });
   };
@@ -57,7 +54,6 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
           onChangeText={setPassword}
         />
         <Button title="Login" onPress={handleLogin} />
-        <ErrorAlert open={open} setOpen={setOpen} errorResponse={errorMsg}></ErrorAlert>
         <View style={styles.separatorContainer}>
           <View style={styles.line} />
           <Text style={styles.separatorText}>or</Text>

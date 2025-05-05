@@ -12,10 +12,12 @@ import Account from '@/components/Account';
 import Group from '@/components/Group';
 import LeaguePage from '@/components/LeaguePage';
 import LocationPage from '@/components/LocationPage';
+import { ErrorAlertProvider } from '@/components/ui/dialogBoxs/ErrorAlertContext';
 const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationIndependentTree>
+      <ErrorAlertProvider>
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen name="Login" component={SignInScreen} />
@@ -41,6 +43,7 @@ export default function App() {
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
+</ErrorAlertProvider>
 </NavigationIndependentTree>
   );
 }

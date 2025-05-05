@@ -32,8 +32,6 @@ export default function LeaguePage({
     mode: "onBlur",
   });
 
-  const [openErr, setOpenErr] = React.useState(false);
-  const [errorMsg, setErrorMsg] = React.useState( new ErrorDetailResponse());
   const [groupList, setGroupList] = useState<Array<MingleGroupDto>>(new Array<MingleGroupDto>());
   const [mingleUserDto, setMingleUserDto] = useState<MingleUserDto>();
 
@@ -65,19 +63,18 @@ export default function LeaguePage({
 
     let mingleGroupDto:MingleGroupDto=mingleUserDto?.getMinglegroupdtoList()
     .find((group)=> group.getId()=== leaguesForm.mingleGroupInfo.id) as MingleGroupDto;
-      mingleGroupDto.addMingleleaguedto(mingleLeagueDto);
       
     console.log("sending MingleLeagueDto", mingleLeagueDto);
     createLeagueApi(mingleLeagueDto).subscribe({
-      next: (mingleLeagueDto:MingleLeagueDto) => {
+      next: (response:MingleLeagueDto) => {
+      mingleGroupDto.addMingleleaguedto(response as MingleLeagueDto);
         MingleCacheService
         .set(mingleUserDto as MingleUserDto);
         navigation.navigate("LocationPage");
       },
       error: (error:ErrorDetailResponse) => {
         console.error("Error creating league:", error);
-        setOpenErr(true);
-        setErrorMsg(error);
+        ErrorAlert(error);
       },
     })
   };
@@ -257,7 +254,7 @@ export default function LeaguePage({
                   >
                     { groupList.map((group) => (
                       <MenuItem key={group.getId()} value={group.getId()}>
-                        {group.getGroupname()+" - "+group.getZip()}
+                        { group.getId()===0?'--':group.getGroupname()+" - "+group.getZip()}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -301,11 +298,7 @@ export default function LeaguePage({
           </form>
         </Paper>
       </Box>
-      <ErrorAlert
-        open={openErr}
-        setOpen={setOpenErr}
-        errorResponse={errorMsg}
-      ></ErrorAlert>
+      
     </ScrollView>
   );
 }

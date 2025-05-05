@@ -6,12 +6,18 @@ import * as jspb from "google-protobuf";
 
 export const handleResult= <T>(err: grpcWeb.RpcError, response: T, subscriber:Subscriber<T>) => {
       if (err) {
-        console.error("response failed:", err);
-        // Step 1: Base64 decode
-        const decodedBinary = Buffer.from(err.message, 'base64');
-                // Step 2: Deserialize rpc.Status
-        const errorDetailResponse = ErrorDetailResponse.deserializeBinary(decodedBinary);
-        subscriber.error(errorDetailResponse); // Emit the error to the Observable
+        try{
+          console.error("response failed:", err);
+          const decodedBinary = Buffer.from(err.message, 'base64');
+          const errorDetailResponse = ErrorDetailResponse.deserializeBinary(decodedBinary);
+          subscriber.error(errorDetailResponse); // Emit the error to the Observable
+        } catch(e){
+          const errorDetailResponse=new ErrorDetailResponse()
+          errorDetailResponse.setTitle("Error Displaying Error")
+          errorDetailResponse.setDescription("Error decoding error binary response")
+          console.error("Error decoding binary response:", e);
+          subscriber.error(err); // Emit the original error to the Observable
+        }
 
       } else {
         console.debug("Login response:", response);

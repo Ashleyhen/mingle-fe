@@ -30,8 +30,6 @@ export default function Group({
     mode: "onChange",
   });
   const [photos, setPhotos] = useState<string[]>([]);
-  const [errorMsg, setErrorMsg] = React.useState( new ErrorDetailResponse());
-  const [openErr, setOpenErr] = React.useState(false);
 
   let mingleUserDto:MingleUserDto
   useEffect(() => {
@@ -51,8 +49,7 @@ export default function Group({
         },
         error: (error:ErrorDetailResponse) => {
             console.error("Error creating group:", error);
-            setErrorMsg(error);
-            setOpenErr(true);
+            ErrorAlert(error);
         }}
       );
     }
@@ -229,11 +226,6 @@ export default function Group({
               Create Group
             </Button>
           </Grid>
-            <ErrorAlert
-              open={openErr}
-              setOpen={setOpenErr}
-              errorResponse={errorMsg}
-            ></ErrorAlert>
         </form>
       </Paper>
     </Box>
