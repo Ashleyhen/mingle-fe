@@ -154,7 +154,6 @@ const LeagueSection = () => {
                   />
                 )}
               />
-              <LeagueSection></LeagueSection>
               {/* Group Selection */}
               <Controller
                 control={control}
@@ -178,7 +177,7 @@ const LeagueSection = () => {
                   </TextField>
                 )}
               />
-
+              <LeagueSection></LeagueSection>
             {/* Host Name */}
               <Controller
                 control={control}
