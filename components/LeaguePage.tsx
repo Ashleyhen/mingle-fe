@@ -22,6 +22,7 @@ import { MingleGroupDto, MingleId, MingleLeagueDto, MingleUserDto } from "@/prot
 import { createLeagueApi } from "@/api/leagueApi";
 import { findAllGroupsByUserId } from "@/api/GroupApi";
 import MingleUserInfo from "./types/MingleUserInfo";
+import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
 
 export default function LeaguePage({
   navigation,
@@ -32,6 +33,7 @@ export default function LeaguePage({
     mode: "onBlur",
   });
 
+  const { showError } = useErrorAlert();
   const [groupList, setGroupList] = useState<Array<MingleGroupDto>>(new Array<MingleGroupDto>());
   const [mingleUserDto, setMingleUserDto] = useState<MingleUserDto>();
 
@@ -74,7 +76,7 @@ export default function LeaguePage({
       },
       error: (error:ErrorDetailResponse) => {
         console.error("Error creating league:", error);
-        ErrorAlert(error);
+        showError(error);
       },
     })
   };

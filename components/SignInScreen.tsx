@@ -6,11 +6,10 @@ import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
 import {loginApi}  from '@/api/UserApi';
 import { green, grey, lightBlue, red } from '@mui/material/colors';
-import ErrorAlert from './ui/dialogBoxs/AlertPopup';
-import MingleUserInfo, { toMingleUserInfo } from './types/MingleUserInfo';
 import { MingleCacheService } from './utility/CacheService';
 import { ErrorDetailResponse } from '@/protos/protos/ErrorDetailResponse_pb';
 import { CredentialsDto } from '@/protos/protos/mingle_pb';
+import { useErrorAlert } from './ui/dialogBoxs/ErrorAlertContext';
 
 
 export default function SignInScreen({ navigation }: { navigation: NavigationProp<any> }) {
@@ -18,6 +17,7 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
+  const { showError } = useErrorAlert();
   const navigateToCreateAccount = ()=>navigation.navigate('New Account');
   const handleLogin = () => {
     const credentials= new CredentialsDto();
@@ -31,7 +31,7 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
       },
       error: (err:ErrorDetailResponse) => {
         console.error('Login failed:', err);
-        ErrorAlert(err);
+        showError(err);
       },
     });
   };

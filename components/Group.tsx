@@ -16,6 +16,7 @@ import { Mode } from "@/constants/State";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { MingleGroupDto, MingleUserDto } from "@/protos/protos/mingle_pb";
 import MingleUserInfo, { toMingleUserDto, toMingleUserInfo } from "./types/MingleUserInfo";
+import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
 
 
 export default function Group({
@@ -26,9 +27,9 @@ export default function Group({
   mode: Mode;
 }) {
   const { control, handleSubmit, reset, formState: { isValid } } = useForm<MingleGroupInfo>({
-
     mode: "onChange",
   });
+  const { showError } = useErrorAlert();
   const [photos, setPhotos] = useState<string[]>([]);
 
   let mingleUserDto:MingleUserDto
@@ -49,7 +50,7 @@ export default function Group({
         },
         error: (error:ErrorDetailResponse) => {
             console.error("Error creating group:", error);
-            ErrorAlert(error);
+            showError(error);
         }}
       );
     }
