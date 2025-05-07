@@ -38,10 +38,25 @@ export type LocationForm = {
 };
 
 export type TimeSlot = {
-  day: string;
+  day: DayOfWeek;
   startTime: string;
   endTime: string;
+  reoccurrence: Reoccurrence;
 }
+
+export enum DayOfWeek{
+  SUNDAY = "Sunday", 
+  MONDAY = "Monday",
+  TUESDAY = "Tuesday",
+  WEDNESDAY = "Wednesday",
+  THURSDAY = "Thursday",
+  FRIDAY = "Friday",
+  SATURDAY = "Saturday"
+}
+export enum Reoccurrence{
+  BIWEEKLY,WEEKLY,ONCE,MONTHLY,DAILY
+}
+
 
 export const toMingleGroupInfo = (response:MingleGroupDto)=>{
       return {
