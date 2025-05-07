@@ -19,8 +19,8 @@ enum Relationship {
     COED='COED',EXCLUSIVE='EXCLUSIVE'
   }
   
-  import dayjs, { Dayjs } from 'dayjs';
-import { toDaysJs, dateToString } from '../utility/MingleFormat';
+import dayjs, { Dayjs } from 'dayjs';
+import { toDayJs, dateToString } from '../utility/MingleFormat';
 import { MingleGroupDto, MingleUserDto } from '@/protos/protos/mingle_pb';
 import MingleGroupInfo, { toMingleGroupInfo } from './MingleGroupInfo';
   
@@ -48,7 +48,7 @@ export const toMingleUserInfo = (response:MingleUserDto)=>{
           email: response.getEmail(),
           password: response.getPassword(),
           image: Uint8Array.from(atob(response.getImage_asB64()), c => c.charCodeAt(0)),
-          birthday: toDaysJs(response.getBirthday()),
+          birthday: toDayJs(response.getBirthday()),
           bio: response.getBio(),
           firstname: response.getFirstname(),
           lastname: response.getLastname(),

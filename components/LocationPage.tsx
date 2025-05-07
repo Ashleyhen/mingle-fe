@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Box, TextField, Button, Grid, Paper, Typography, MenuItem } from "@mui/material";
 import { ScrollView } from "react-native";
-import { LocationForm } from "./types/MingleGroupInfo";
-import { MingleGroupDto, MingleLeagueDto, MingleLocationDto, MingleUserDto } from "@/protos/protos/mingle_pb";
+import { LocationForm, TimeSlot } from "./types/MingleGroupInfo";
+import { MingleGroupDto, MingleLeagueDto, MingleLocationDto, MingleTimeSlotDto, MingleUserDto } from "@/protos/protos/mingle_pb";
 import { MingleCacheService } from "./utility/CacheService";
 import { mingle } from "@/protos/protos/ErrorDetailResponse";
 import { group } from "console";
@@ -13,6 +13,7 @@ import ErrorAlert from "./ui/dialogBoxs/AlertPopup";
 import { min } from "rxjs";
 import { NavigationProp } from "@react-navigation/native";
 import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
+import EveryDayTime from "./EventDayTime";
 
 
 
@@ -21,6 +22,7 @@ export default function LocationPage( { navigation }: { navigation: NavigationPr
     mode: "onBlur",
   });
 
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [mingleUserDto, setMingleUserDto] = useState<MingleUserDto>();
   const [groupList, setGroupList] = useState<Array<MingleGroupDto>>(new Array<MingleGroupDto>());
   const [leagueList, setLeagueList] = useState<Array<MingleLeagueDto>>(new Array<MingleLeagueDto>());
@@ -36,10 +38,22 @@ export default function LocationPage( { navigation }: { navigation: NavigationPr
     mingleLocationDto.setDescription(locationForm.description);
     mingleLocationDto.setMingleleaguedto(new MingleLeagueDto().setId(locationForm.league.id));
 
+    const mingleTimeSlotList=timeSlots.map((timeSlot:TimeSlot)=>{
+      const mtl = new MingleTimeSlotDto();
+      mtl.setDayofweek(timeSlot.day);
+      mtl.setStarttime(timeSlot.startTime);
+      mtl.setEndtime(timeSlot.endTime);
+      mtl.setReoccurrence(timeSlot.reoccurrence.toString());
+      return mtl;
+    })
+
+
     let mingleLeauge =mingleUserDto?.getMinglegroupdtoList()
     .find(group=>group.getId()===locationForm.mingleGroupInfo.id)?.
-    getMingleleaguedtoList().find(league=>league.getId()===locationForm.league.id) as MingleLeagueDto; 
+    getMingleleaguedtoList()
+    .find(league=>league.getId()===locationForm.league.id) as MingleLeagueDto; 
   
+    mingleLocationDto.setMingletimeslotdtoList(mingleTimeSlotList);
     createLocationApi(mingleLocationDto).subscribe({
       next: (response:MingleLocationDto) => {
         console.log("Location created successfully:", response);
@@ -270,6 +284,7 @@ const LeagueSection = () => {
                   />
                 )}
               />
+              <EveryDayTime timeSlots={timeSlots} setTimeSlots={setTimeSlots}></EveryDayTime>
 
             {/* Submit Button */}
               <Button
@@ -285,7 +300,6 @@ const LeagueSection = () => {
         </form>
       </Paper>
     </Box>
-
     </ScrollView>
   );
 }
