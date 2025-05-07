@@ -30,10 +30,10 @@ import { MingleCacheService } from "./utility/CacheService";
 import { parse } from "path";
 import { waitForDebugger } from "inspector";
 import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
-import { Mode } from "@/constants/State";
 import { dateToString } from "./utility/MingleFormat";
 import { MingleUserDto, SuccessMsg } from "@/protos/protos/mingle_pb";
 import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
+import { MingleMode } from "@/constants/MingleMode";
 
 
 export default function Account({
@@ -41,7 +41,7 @@ export default function Account({
   mode,
 }: {
   navigation: NavigationProp<any>;
-  mode: Mode;
+  mode: MingleMode;
 }) {
   const [open, setOpen] = React.useState(false);
   const { showError } = useErrorAlert();

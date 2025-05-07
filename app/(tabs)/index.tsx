@@ -9,10 +9,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 import SignInScreen from '@/components/SignInScreen';
 import HomeScreen from '@/components/HomeScreen';
 import Account from '@/components/Account';
-import Group from '@/components/Group';
 import LeaguePage from '@/components/LeaguePage';
 import LocationPage from '@/components/LocationPage';
 import { ErrorAlertProvider } from '@/components/ui/dialogBoxs/ErrorAlertContext';
+import GroupPage from '@/components/GroupPage';
 const Stack = createStackNavigator();
 export default function App() {
   return (
@@ -25,8 +25,8 @@ export default function App() {
           {(props: any) => <Account {...props} mode="new" />}
         </Stack.Screen>
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Logout' }} />
-        <Stack.Screen name="Group" options={{ title: 'Home' }}
-          children={(props: any) => <Group {...props} mode="new" />}
+        <Stack.Screen name="GroupPage" options={{ title: 'Home' }}
+          children={(props: any) => <GroupPage {...props} mode="new" />}
         />
 
         <Stack.Screen name="LocationPage" options={{ title: 'Home' }}
