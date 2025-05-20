@@ -2,11 +2,11 @@ import React, { useCallback, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import FormGrid from "@mui/material/Grid"; // Adjust the import path as necessary
 import Grid from "@mui/material/Grid";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup/ToggleButtonGroup";
-import ToggleButton from "@mui/material/ToggleButton/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import ToggleButton from "@mui/material/ToggleButton";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
-import Avatar from "@mui/material/Avatar/Avatar";
+import Avatar from "@mui/material/Avatar";
 import { Button, TextField } from "@mui/material";
 import { NavigationProp } from "@react-navigation/native";
 import PasswordDialog from "./ui/dialogBoxs/PasswordDialog";
