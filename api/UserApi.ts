@@ -14,15 +14,21 @@ const client = new UserGrpcClient(baseUrl); // Envoy proxy URL
 
 /**
  * Login function using Observables
- * @param email - User's email
- * @param password - User's password
+ * @param credentials - User's credentials (CredentialsDto)
+ * @param bearerToken - Bearer token string (optional)
  * @returns Observable<MingleUserDto>
  */
-const loginApi = (credentials: CredentialsDto): Observable<MingleUserDto> => {
+const loginApi = (credentials: CredentialsDto, bearerToken?: string): Observable<MingleUserDto> => {
   return new Observable((subscriber) => {
-    // Create the gRPC CredentialsDto request object
-    client.login(credentials, {}, (err: grpcWeb.RpcError, response: MingleUserDto) => 
-       handleResult(err, response, subscriber))
+    // Prepare metadata with Authorization header if token is provided
+    const metadata: grpcWeb.Metadata = {};
+    if (bearerToken) {
+      metadata['Authorization'] = `Bearer ${bearerToken}`;
+    }
+    console.log("Login API called with credentials:", baseUrl);
+    client.login(credentials, metadata, (err: grpcWeb.RpcError, response: MingleUserDto) => 
+      handleResult(err, response, subscriber)
+    );
   });
 };
 
