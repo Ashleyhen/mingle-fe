@@ -10,11 +10,14 @@ import { ErrorDetailResponse } from '@/protos/protos/ErrorDetailResponse_pb';
 import { CredentialsDto } from '@/protos/protos/mingle_pb';
 import { useErrorAlert } from './ui/dialogBoxs/ErrorAlertContext';
 import { useMemo, useState, useEffect } from 'react';
-import { login } from '@/api/auth';
 import { useAuthRequest, useAutoDiscovery } from 'expo-auth-session';
 import { makeRedirectUri } from 'expo-auth-session';
 import { baseUrl, clientId, realm, scope } from '@/constants/env';
 import * as AuthSession from 'expo-auth-session';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAccessToken  } from '@/store/authSlice';
+import { RootState } from '@/store';
+import { from } from 'rxjs';
 
 
 export default function SignInScreen({ navigation }: { navigation: NavigationProp<any> }) {
@@ -25,6 +28,8 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
   const issuer = `${baseUrl}/realms/${realm}`;
   const discovery = useAutoDiscovery(issuer);
   const redirectUri = makeRedirectUri()
+  const dispatch = useDispatch();
+  const tokenSelector=useSelector((state:RootState) => state.auth.accessToken) ;
   ;
   // https://rene-wilby.de/en/blog/rn-expo-oauth-authorization-code-flow-pkce-keycloak
   const [request, response, promptAsync] = useAuthRequest(
@@ -44,65 +49,65 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
       const code = decodeURIComponent(match[1]);
       const codeVerifier = localStorage.getItem('pkce_code_verifier') ?? undefined;
 
-      (async () => {
-        const tokenResponse = await AuthSession.exchangeCodeAsync(
+      // Wrap the async call in an Observable
+      const token$ = from(
+        AuthSession.exchangeCodeAsync(
           {
             clientId,
             code,
             redirectUri,
             extraParams: {
-              code_verifier: codeVerifier ?? '', // <-- ensure it's always a string
+              code_verifier: codeVerifier ?? '',
             },
           },
           discovery
-        );
-      const credentials= new CredentialsDto();
-        loginApi(credentials, tokenResponse.accessToken).subscribe({
-          next: (response) => {
-            console.log('Login successful:', response);
-            MingleCacheService.set(response); // Cache the data
-            navigation.navigate("Home");
-          },
-          error: (err) => {
-            console.error('Login failed:', err);
-            showError(err);
-          },
-        })
-        console.log('Bearer token:', tokenResponse.accessToken);
-        
-        // Optionally, clear the codeVerifier from storage
-        localStorage.removeItem('pkce_code_verifier');
-        window.history.replaceState({}, document.title, window.location.pathname);
-      })();
+        )
+      );
+
+      token$.subscribe({
+        next: (tokenResponse) => {
+          const credentials = new CredentialsDto();
+          loginApi(credentials, tokenResponse.accessToken).subscribe({
+            next: (response) => {
+              console.log('Login successful:', response);
+              MingleCacheService.set(response); // Cache the data
+              navigation.navigate("Home");
+            },
+            error: (err) => {
+              console.error('Login failed:', err);
+              showError(err);
+            },
+          });
+
+
+          
+          dispatch(setAccessToken(tokenResponse));
+          
+          // Optionally, clear the codeVerifier from storage
+          localStorage.removeItem('pkce_code_verifier');
+          window.history.replaceState({}, document.title, window.location.pathname);
+        },
+        error: (err) => {
+          showError(err);
+        },
+      });
     }
   }, [discovery]);
 
-
+useEffect(() => {
+  if (tokenSelector) {
+    console.log('Access token set in Redux:', tokenSelector);
+  }
+}, [tokenSelector]);
 
   const navigateToCreateAccount = () => navigation.navigate('New Account');
   const handleLogin = async () => {
     if (request?.codeVerifier) {
       localStorage.setItem('pkce_code_verifier', request.codeVerifier);
     }
-    console.log(await promptAsync({
-      url: "",
-    }))  
+    await promptAsync()  
   };
 
-// const credentials= new CredentialsDto();
-//     credentials.setEmail(email);
-//     credentials.setPassword(password);
-//     loginApi(credentials).subscribe({
-//       next: (response) => {
-//         console.log('Login successful:', response);
-//         MingleCacheService.set(response); // Cache the data
-//         navigation.navigate("Home")
-//       },
-//       error: (err:ErrorDetailResponse) => {
-//         console.error('Login failed:', err);
-//         showError(err);
-//       },
-//     });
   return (
     <View style={styles.container}>
         <View style={styles.form}>
