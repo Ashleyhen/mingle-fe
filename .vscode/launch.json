@@ -2,12 +2,30 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Expo App",
+      "name": "Debug Expo Web (Chrome)",
       "request": "launch",
-      "cwd": "${workspaceFolder}",
-      "type": "reactnative",
+      "type": "chrome",
+      "url": "http://localhost:8081",
+      "webRoot": "${workspaceFolder}",
       "sourceMaps": true,
-      "platform": "expoweb"
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///*": "*"
+      }
+    },
+    {
+      "name": "Debug Expo Native",
+      "request": "launch",
+      "type": "reactnative",
+      "cwd": "${workspaceFolder}",
+      "platform": "exponent",
+      "sourceMaps": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug All",
+      "configurations": ["Debug Expo Web (Chrome)", "Debug Expo Native"]
     }
   ]
 }
