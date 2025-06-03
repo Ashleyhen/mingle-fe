@@ -1,62 +1,106 @@
 import * as AuthSession from 'expo-auth-session';
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { clientId } from '@/constants/env';
-import { discovery } from '@/api/auth';
+import { from, lastValueFrom } from 'rxjs';
+import { DiscoveryDocument, TokenResponseConfig, useAutoDiscovery } from 'expo-auth-session';
+import { useDispatch } from 'react-redux';
 
+ 
 type AuthState = {
-  accessToken: AuthSession.TokenResponse | null;
+  accessToken: TokenResponseConfig | null;
 };
 
 const initialState: AuthState = {
   accessToken: null,
 };
 
+// const dispatch = useDispatch();
+
 // export const refreshAccessToken = createAsyncThunk(
 //   'auth/refreshAccessToken',
 //   async (
 //     {
-//       tokenResponse,
+//       accessToken,
+//       refreshToken,
+//       scope,
 //     }: {
-//       tokenResponse: AuthSession.TokenResponse;
+//       accessToken: string;
+//       refreshToken: string;
+//       scope?: string;
 //     },
 //     { dispatch }
 //   ) => {
-//     // Only refresh if expired
-//     if (!isTokenExpired(tokenResponse)) return tokenResponse;
-    
-//     const { refreshToken, scope } = tokenResponse;
+//     if (!isTokenExpired(accessToken)) return Promise.resolve(accessToken);
+
 //     if (!discovery) {
-//       throw new Error('Discovery document is not available');
+//       return Promise.reject(new Error('Discovery document is not available'));
 //     }
-//     const refreshed = await AuthSession.refreshAsync(
-//       { clientId, refreshToken, scopes: scope ? scope.split(' ') : undefined },
-//       discovery
+
+//     const refresh$ = from(
+//       AuthSession.refreshAsync(
+//         { clientId, refreshToken, scopes: scope ? scope.split(' ') : undefined },
+//         discovery
+//       )
 //     );
-//     dispatch(setAccessToken(refreshed));
-    
-//     return refreshed.accessToken;
+
+//     // Return the promise directly, no await
+//     return lastValueFrom(refresh$).then(refreshed => {
+//       dispatch(setAccessToken(refreshed.accessToken));
+//       if (refreshed.refreshToken) {
+//         dispatch(setRefreshToken(refreshed.refreshToken));
+//       }
+//       return refreshed.accessToken;
+//     });
 //   }
 // );
+
+export const refreshAccessToken = createAsyncThunk(
+  'auth/refreshAccessToken',
+  async (discovery:DiscoveryDocument, thunkAPI) => {
+    const authState = thunkAPI.getState() as { auth: AuthState };
+    const accessToken = authState.auth.accessToken;
+    // const discovery = useAutoDiscovery(issuer);
+    if (!accessToken || !isTokenExpired(accessToken)) return Promise.resolve(accessToken);
+    if (!discovery) {
+      return Promise.reject(new Error('Discovery document is not available'));
+    }
+
+    
+    const refreshToken = accessToken.refreshToken || '';
+    const scope = accessToken.scope || '';
+    const refreshed = 
+      await AuthSession.refreshAsync(
+        { clientId, refreshToken, scopes: scope ? scope.split(' '):[]  },
+        discovery
+      )
+
+      console.log('refereshed!:', refreshed);
+    // Return the promise directly, no await
+    return refreshed;
+  }
+);
 
 export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setAccessToken: (state, action: PayloadAction<AuthSession.TokenResponse>) => {
+    setAccessToken: (state, action: PayloadAction<TokenResponseConfig>) => {
       state.accessToken = action.payload;
     },
-    
-  
+  },
+  extraReducers(builder) {
+    builder.addCase(refreshAccessToken.fulfilled, (state, action: PayloadAction<TokenResponseConfig | null>) => {
+      state.accessToken = action.payload;
+    });
   },
 });
 
-export const { setAccessToken   } = authSlice.actions;
+export const { setAccessToken } = authSlice.actions;
 export default authSlice.reducer;
 
-// Utility to check if a JWT is expired
-export function isTokenExpired(token: AuthSession.TokenResponse): boolean {
-  if (!token) return true;
-  const expiresIn = token.expiresIn ?? 0;
-  return token.issuedAt + expiresIn < Math.floor(Date.now() / 1000);
-  
+export function isTokenExpired(token: TokenResponseConfig): boolean {
+  if (!token || token.expiresIn === undefined) return true;
+  // expiresIn: number of seconds the token is valid after issuedAt
+  const expiry = (token.issuedAt ?? 0) + token.expiresIn;
+  return expiry < Date.now() / 1000; // true if expired
 }

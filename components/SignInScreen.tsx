@@ -12,11 +12,11 @@ import { useErrorAlert } from './ui/dialogBoxs/ErrorAlertContext';
 import { useMemo, useState, useEffect } from 'react';
 import { useAuthRequest, useAutoDiscovery } from 'expo-auth-session';
 import { makeRedirectUri } from 'expo-auth-session';
-import { baseUrl, clientId, realm, scope } from '@/constants/env';
+import { baseUrl, clientId, issuer, realm, scope } from '@/constants/env';
 import * as AuthSession from 'expo-auth-session';
 import { useDispatch, useSelector } from 'react-redux';
-import { setAccessToken  } from '@/store/authSlice';
-import { RootState } from '@/store';
+import { refreshAccessToken, setAccessToken  } from '@/store/authSlice';
+import { AppDispatch, RootState } from '@/store';
 import { from } from 'rxjs';
 
 
@@ -25,10 +25,8 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
   const [password, setPassword] = useState('');
   const { showError } = useErrorAlert();
 
-  const issuer = `${baseUrl}/realms/${realm}`;
   const discovery = useAutoDiscovery(issuer);
   const redirectUri = makeRedirectUri()
-  const dispatch = useDispatch();
   const tokenSelector=useSelector((state:RootState) => state.auth.accessToken) ;
   ;
   // https://rene-wilby.de/en/blog/rn-expo-oauth-authorization-code-flow-pkce-keycloak
@@ -70,6 +68,7 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
           loginApi(credentials, tokenResponse.accessToken).subscribe({
             next: (response) => {
               console.log('Login successful:', response);
+              console.log('Access Token:', tokenResponse.accessToken);
               MingleCacheService.set(response); // Cache the data
               navigation.navigate("Home");
             },
@@ -79,10 +78,6 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
             },
           });
 
-
-          
-          dispatch(setAccessToken(tokenResponse));
-          
           // Optionally, clear the codeVerifier from storage
           localStorage.removeItem('pkce_code_verifier');
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -101,6 +96,7 @@ useEffect(() => {
 }, [tokenSelector]);
 
   const navigateToCreateAccount = () => navigation.navigate('New Account');
+
   const handleLogin = async () => {
     if (request?.codeVerifier) {
       localStorage.setItem('pkce_code_verifier', request.codeVerifier);

@@ -6,6 +6,7 @@ export const realm=Constants.expoConfig?.extra?.REALM || "";
 export const baseUrl:string = Constants.expoConfig?.extra?.GATEWAY_HOEST || "";
 export const clientId = Constants.expoConfig?.extra?.CLIENT_ID || "";
 export const scope = Constants.expoConfig?.extra?.SCOPE || "";
+export const issuer = `${baseUrl}/realms/${realm}`;
 // Optional: Add type safety
 interface AppConfig {
   GATEWAY_HOEST: string;
