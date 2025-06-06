@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -10,30 +9,99 @@ import { MingleCacheService } from './utility/CacheService';
 import { ErrorDetailResponse } from '@/protos/protos/ErrorDetailResponse_pb';
 import { CredentialsDto } from '@/protos/protos/mingle_pb';
 import { useErrorAlert } from './ui/dialogBoxs/ErrorAlertContext';
+import { useMemo, useState, useEffect } from 'react';
+import { useAuthRequest, useAutoDiscovery } from 'expo-auth-session';
+import { makeRedirectUri } from 'expo-auth-session';
+import { baseUrl, clientId, issuer, realm, scope } from '@/constants/env';
+import * as AuthSession from 'expo-auth-session';
+import { useDispatch, useSelector } from 'react-redux';
+import { refreshAccessToken, setAccessToken  } from '@/store/authSlice';
+import { AppDispatch, RootState } from '@/store';
+import { from } from 'rxjs';
 
 
 export default function SignInScreen({ navigation }: { navigation: NavigationProp<any> }) {
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
   const { showError } = useErrorAlert();
-  const navigateToCreateAccount = ()=>navigation.navigate('New Account');
-  const handleLogin = () => {
-    const credentials= new CredentialsDto();
-    credentials.setEmail(email);
-    credentials.setPassword(password);
-    loginApi(credentials).subscribe({
-      next: (response) => {
-        console.log('Login successful:', response);
-        MingleCacheService.set(response); // Cache the data
-        navigation.navigate("Home")
-      },
-      error: (err:ErrorDetailResponse) => {
-        console.error('Login failed:', err);
-        showError(err);
-      },
-    });
+
+  const discovery = useAutoDiscovery(issuer);
+  const redirectUri = makeRedirectUri()
+  const tokenSelector=useSelector((state:RootState) => state.auth.accessToken) ;
+  ;
+  // https://rene-wilby.de/en/blog/rn-expo-oauth-authorization-code-flow-pkce-keycloak
+  const [request, response, promptAsync] = useAuthRequest(
+    {
+      clientId: clientId,
+      scopes: scope.split(' '),
+      redirectUri: redirectUri,
+    },
+    discovery
+  );
+
+  // Parse code from URL on mount (for web)
+  useEffect(() => {
+    const url = window.location.href;
+    const match = url.match(/[?&]code=([^&]+)/);
+    if (match && discovery) {
+      const code = decodeURIComponent(match[1]);
+      const codeVerifier = localStorage.getItem('pkce_code_verifier') ?? undefined;
+
+      // Wrap the async call in an Observable
+      const token$ = from(
+        AuthSession.exchangeCodeAsync(
+          {
+            clientId,
+            code,
+            redirectUri,
+            extraParams: {
+              code_verifier: codeVerifier ?? '',
+            },
+          },
+          discovery
+        )
+      );
+
+      token$.subscribe({
+        next: (tokenResponse) => {
+          const credentials = new CredentialsDto();
+          loginApi(credentials, tokenResponse.accessToken).subscribe({
+            next: (response) => {
+              console.log('Login successful:', response);
+              console.log('Access Token:', tokenResponse.accessToken);
+              MingleCacheService.set(response); // Cache the data
+              navigation.navigate("Home");
+            },
+            error: (err) => {
+              console.error('Login failed:', err);
+              showError(err);
+            },
+          });
+
+          // Optionally, clear the codeVerifier from storage
+          localStorage.removeItem('pkce_code_verifier');
+          window.history.replaceState({}, document.title, window.location.pathname);
+        },
+        error: (err) => {
+          showError(err);
+        },
+      });
+    }
+  }, [discovery]);
+
+useEffect(() => {
+  if (tokenSelector) {
+    console.log('Access token set in Redux:', tokenSelector);
+  }
+}, [tokenSelector]);
+
+  const navigateToCreateAccount = () => navigation.navigate('New Account');
+
+  const handleLogin = async () => {
+    if (request?.codeVerifier) {
+      localStorage.setItem('pkce_code_verifier', request.codeVerifier);
+    }
+    await promptAsync()  
   };
 
   return (

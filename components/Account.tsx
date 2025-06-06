@@ -30,10 +30,17 @@ import { MingleCacheService } from "./utility/CacheService";
 import { parse } from "path";
 import { waitForDebugger } from "inspector";
 import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
+import {  Mode } from "@/constants/State";
 import { dateToString } from "./utility/MingleFormat";
 import { MingleUserDto, SuccessMsg } from "@/protos/protos/mingle_pb";
 import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
-import { MingleMode } from "@/constants/MingleMode";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store";
+import { ref } from "process";
+import { refreshAccessToken } from "@/store/authSlice";
+import { useAutoDiscovery } from "expo-auth-session";
+import { issuer } from "@/constants/env";
+
 
 
 export default function Account({
@@ -43,6 +50,10 @@ export default function Account({
   navigation: NavigationProp<any>;
   mode: MingleMode;
 }) {
+const asyncDispatch = useDispatch<AppDispatch>()
+const tokenSelector=useSelector((state:RootState) => state.auth.accessToken) ;
+const discovery = useAutoDiscovery(issuer);
+
   const [open, setOpen] = React.useState(false);
   const { showError } = useErrorAlert();
 
@@ -107,7 +118,11 @@ export default function Account({
       
       console.log(control._formValues);
 
-      editAccountApi(toMingleUserDto(updatedMingleUserAccount)).subscribe({
+      if (discovery) {
+        asyncDispatch(refreshAccessToken(discovery));
+      }
+
+      editAccountApi(toMingleUserDto(updatedMingleUserAccount),tokenSelector?.accessToken).subscribe({
         next: (mingleUserDto: MingleUserDto) => {
           MingleCacheService.set(mingleUserDto);
           navigation.navigate("Home");
