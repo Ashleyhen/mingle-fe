@@ -28,8 +28,8 @@ export default function App() {
                 {(props: any) => <Account {...props} mode="new" />}
               </Stack.Screen>
               <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Logout' }} />
-              <Stack.Screen name="Group" options={{ title: 'Home' }}
-                children={(props: any) => <Group {...props} mode="new" />}
+              <Stack.Screen name="GroupPage" options={{ title: 'Home' }}
+                children={(props: any) => <GroupPage {...props} mode="new" />}
               />
 
               <Stack.Screen name="LocationPage" options={{ title: 'Home' }}
