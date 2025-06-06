@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useContext, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import FormGrid from "@mui/material/Grid"; // Adjust the import path as necessary
 import Grid from "@mui/material/Grid";
@@ -26,7 +26,6 @@ import dayjs, { Dayjs } from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { MingleCacheService } from "./utility/CacheService";
 import { parse } from "path";
 import { waitForDebugger } from "inspector";
 import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
@@ -40,6 +39,7 @@ import { ref } from "process";
 import { refreshAccessToken } from "@/store/authSlice";
 import { useAutoDiscovery } from "expo-auth-session";
 import { issuer } from "@/constants/env";
+import { setMingleUser } from "@/store/mingleUserSlice";
 import { MingleMode } from "@/constants/MingleMode";
 
 
@@ -51,6 +51,7 @@ export default function Account({
   navigation: NavigationProp<any>;
   mode: MingleMode;
 }) {
+const mingleUserSelector=useSelector((state:RootState) => state.user); ;
 const asyncDispatch = useDispatch<AppDispatch>()
 const tokenSelector=useSelector((state:RootState) => state.auth.accessToken) ;
 const discovery = useAutoDiscovery(issuer);
@@ -97,7 +98,7 @@ const discovery = useAutoDiscovery(issuer);
     );
     createAccountApi(mingleUserDto).subscribe({
       next: (response: MingleUserDto) => {
-        MingleCacheService.set(response);
+        setMingleUser(response);
         navigation.navigate("Home");
       },
       error: (errorDetailResponse:ErrorDetailResponse) => {
@@ -106,6 +107,7 @@ const discovery = useAutoDiscovery(issuer);
       },
     });
   };
+
   const openDialog = () => {
     if (mode === "new") {
       setOpen(true);
@@ -114,9 +116,8 @@ const discovery = useAutoDiscovery(issuer);
 
       const updatedMingleUserAccount = getValues();
 
-      const accountInfo=MingleCacheService.get();
-      updatedMingleUserAccount.id=accountInfo.getId()
-      
+      updatedMingleUserAccount.id=mingleUserSelector.getId()
+
       console.log(control._formValues);
 
       if (discovery) {
@@ -125,7 +126,7 @@ const discovery = useAutoDiscovery(issuer);
 
       editAccountApi(toMingleUserDto(updatedMingleUserAccount),tokenSelector?.accessToken).subscribe({
         next: (mingleUserDto: MingleUserDto) => {
-          MingleCacheService.set(mingleUserDto);
+          setMingleUser(mingleUserDto);
           navigation.navigate("Home");
         },
         error: (err:ErrorDetailResponse) => {
@@ -199,7 +200,7 @@ const discovery = useAutoDiscovery(issuer);
 
   useEffect(() => {
     if (mode === "edit") {
-      const accountInfo=MingleCacheService.get();
+      const accountInfo=mingleUserSelector;
       control._formValues.bio = accountInfo.getBio() ?? "";
       control._formValues.image = accountInfo.getImage() ?? new Uint8Array(0);
       control._formValues.firstname = accountInfo.getFirstname() ?? "";
@@ -218,8 +219,7 @@ const discovery = useAutoDiscovery(issuer);
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Grid container component="form" sx={centerStyle}>
+        <Grid container component="form" sx={centerStyle} onSubmit={handleSubmit(onSubmit)}>
           <WhiteBox>
             <FormGrid
               sx={{
@@ -564,7 +564,6 @@ const discovery = useAutoDiscovery(issuer);
             </Button>
           </WhiteBox>
         </Grid>
-      </form>
     </ScrollView>
   );
 }

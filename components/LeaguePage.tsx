@@ -11,7 +11,6 @@ import {
 import { useForm, Controller, set } from "react-hook-form";
 import { ScrollView, View } from "react-native";
 import { LeaguesForm, LocationForm, toMingleGroupDto } from "./types/MingleGroupInfo";
-import { MingleCacheService } from "./utility/CacheService";
 import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
 import { on } from "events";
 import ErrorAlert from "./ui/dialogBoxs/AlertPopup";
@@ -23,6 +22,9 @@ import { createLeagueApi } from "@/api/leagueApi";
 import { findAllGroupsByUserId } from "@/api/GroupApi";
 import MingleUserInfo from "./types/MingleUserInfo";
 import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { setMingleUser } from "@/store/mingleUserSlice";
 
 export default function LeaguePage({
   navigation,
@@ -34,21 +36,10 @@ export default function LeaguePage({
   });
 
   const { showError } = useErrorAlert();
-  const [groupList, setGroupList] = useState<Array<MingleGroupDto>>(new Array<MingleGroupDto>());
-  const [mingleUserDto, setMingleUserDto] = useState<MingleUserDto>();
+  const mingleUserDto=useSelector((state:RootState) => state.user); ;
 
+  const groupList: MingleGroupDto[] = mingleUserDto?.getMinglegroupdtoList() || [];
   
-
-  useEffect(() => {
-    const userDto = MingleCacheService.get(); // Retrieve the data
-    console.log("MingleUserDto from MingleCacheService.get()", userDto);
-    if (userDto) {
-        setMingleUserDto(userDto); // Update state
-        setGroupList(userDto.getMinglegroupdtoList() as Array<MingleGroupDto> || []);
-    } else {
-        console.warn("MingleUserDto is undefined. Check localStorage data.");
-    }
-}, []);
 
   
   const onSubmit = (leaguesForm: LeaguesForm) => {
@@ -70,8 +61,7 @@ export default function LeaguePage({
     createLeagueApi(mingleLeagueDto).subscribe({
       next: (response:MingleLeagueDto) => {
       mingleGroupDto.addMingleleaguedto(response as MingleLeagueDto);
-        MingleCacheService
-        .set(mingleUserDto as MingleUserDto);
+      setMingleUser(mingleUserDto as MingleUserDto);
         navigation.navigate("LocationPage");
       },
       error: (error:ErrorDetailResponse) => {

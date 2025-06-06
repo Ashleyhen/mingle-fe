@@ -13,11 +13,12 @@ import {
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import React, { useEffect, useState } from "react";
-import { MingleCacheService } from "./utility/CacheService";
 import { MingleGroupDto, MingleUserDto } from "@/protos/protos/mingle_pb";
 import { NavigationProp } from "@react-navigation/native";
 import { navigate } from "expo-router/build/global-state/routing";
 import MingleGroupInfo, { toMingleGroupInfo } from "./types/MingleGroupInfo";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export const GroupDashBoard = ({
   navigation,
@@ -27,7 +28,7 @@ export const GroupDashBoard = ({
   menuActionFuncs: (mingleGroupInfo:MingleGroupDto)=>MenuActionsFunctions; // Callback to expand the accordion
 }) => {
   const [loading, setLoading] = useState(true);
-  const [mingleUserDto, setMingleUserDto] = useState<MingleUserDto | null>(null);
+  const mingleUserDto=useSelector((state:RootState) => state.user); ;
 
   const GroupDashBoardCard = ({
     group,
@@ -129,16 +130,6 @@ export const GroupDashBoard = ({
       </Card>
     );
   };
-
-  useEffect(() => {
-    const fetchData = () => {
-      const userDto = MingleCacheService.get();
-      setMingleUserDto(userDto);
-      setLoading(false);
-    };
-
-    fetchData();
-  }, []);
 
   if (!mingleUserDto) {
     return <Typography variant="h6">No user data available.</Typography>;

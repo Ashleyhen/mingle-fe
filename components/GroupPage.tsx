@@ -18,7 +18,6 @@ import { useForm, Controller, set } from "react-hook-form";
 import { launchImageLibraryAsync } from "expo-image-picker";
 import { NavigationProp } from "@react-navigation/native";
 import { createGroupApi } from "@/api/GroupApi";
-import { MingleCacheService } from "./utility/CacheService";
 import { MingleGroupDto, MingleUserDto } from "@/protos/protos/mingle_pb";
 import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
 import MingleGroupInfo, {
@@ -29,6 +28,9 @@ import { ScrollView } from "react-native";
 import { View } from "react-native-reanimated/lib/typescript/Animated";
 import { GroupDashBoard, MenuActionsFunctions } from "./GroupDashBoard";
 import { MingleMode } from "@/constants/MingleMode";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { setMingleUser } from "@/store/mingleUserSlice";
 
 export default function GroupPage({
   navigation,
@@ -51,18 +53,15 @@ export default function GroupPage({
   const [photos, setPhotos] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(false); // State to control accordion expansion
   const [submitButtonTitle, setSubmitButtonTitle] = useState("Save");
-  let mingleUserDto: MingleUserDto;
-  useEffect(() => {
-    mingleUserDto = MingleCacheService.get();
-  }, []);
-
+  const mingleUserDto=useSelector((state:RootState) => state.user); ;
+  
   const onSubmit = (data: MingleGroupInfo) => {
     const mingleGroupDto = toMingleGroupDto(data);
     mingleGroupDto.setOrganizer(mingleUserDto);
 
     createGroupApi(mingleGroupDto).subscribe({
       next: (response: MingleGroupDto) => {
-        MingleCacheService.set(response.getOrganizer() as MingleUserDto);
+        setMingleUser(response.getOrganizer() as MingleUserDto);
         console.log("Group created successfully:", response);
         navigation.navigate("LeaguesPage");
       },

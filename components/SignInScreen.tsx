@@ -5,11 +5,10 @@ import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
 import {loginApi}  from '@/api/UserApi';
 import { green, grey, lightBlue, red } from '@mui/material/colors';
-import { MingleCacheService } from './utility/CacheService';
 import { ErrorDetailResponse } from '@/protos/protos/ErrorDetailResponse_pb';
 import { CredentialsDto } from '@/protos/protos/mingle_pb';
 import { useErrorAlert } from './ui/dialogBoxs/ErrorAlertContext';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useContext } from 'react';
 import { useAuthRequest, useAutoDiscovery } from 'expo-auth-session';
 import { makeRedirectUri } from 'expo-auth-session';
 import { baseUrl, clientId, issuer, realm, scope } from '@/constants/env';
@@ -18,12 +17,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { refreshAccessToken, setAccessToken  } from '@/store/authSlice';
 import { AppDispatch, RootState } from '@/store';
 import { from } from 'rxjs';
+import mingleUserSlice, { setMingleUser } from '@/store/mingleUserSlice';
 
 
 export default function SignInScreen({ navigation }: { navigation: NavigationProp<any> }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { showError } = useErrorAlert();
+  const dispatch = useDispatch();
 
   const discovery = useAutoDiscovery(issuer);
   const redirectUri = makeRedirectUri()
@@ -69,7 +70,7 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
             next: (response) => {
               console.log('Login successful:', response);
               console.log('Access Token:', tokenResponse.accessToken);
-              MingleCacheService.set(response); // Cache the data
+              dispatch(setMingleUser(response)); // Dispatch action to set access token in Redux store
               navigation.navigate("Home");
             },
             error: (err) => {
@@ -88,12 +89,6 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
       });
     }
   }, [discovery]);
-
-useEffect(() => {
-  if (tokenSelector) {
-    console.log('Access token set in Redux:', tokenSelector);
-  }
-}, [tokenSelector]);
 
   const navigateToCreateAccount = () => navigation.navigate('New Account');
 
