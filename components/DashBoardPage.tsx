@@ -11,17 +11,19 @@ import {
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import React, { useEffect, useState } from "react";
-import { MingleCacheService } from "./utility/CacheService";
 import { MingleGroupDto, MingleUserDto } from "@/protos/protos/mingle_pb";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export const DashBoardPage = () => {
   const [loading, setLoading] = useState(true); // Initialize loading state
   const [mingleUserDto, setMingleUserDto] = useState<MingleUserDto | null>(null); // Initialize user state
 
+  const mingleUserSelector=useSelector((state:RootState) => state.user); ;
   useEffect(() => {
     // Fetch data from MingleCacheService
     const fetchData = () => {
-      const userDto = MingleCacheService.get(); // Retrieve user data from cache
+      const userDto = mingleUserSelector; // Retrieve user data from cache
       setMingleUserDto(userDto);
       setLoading(false); // Set loading to false after data is fetched
     };

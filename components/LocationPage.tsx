@@ -4,7 +4,6 @@ import { Box, TextField, Button, Grid, Paper, Typography, MenuItem } from "@mui/
 import { ScrollView } from "react-native";
 import { LocationForm, TimeSlot } from "./types/MingleGroupInfo";
 import { MingleGroupDto, MingleLeagueDto, MingleLocationDto, MingleTimeSlotDto, MingleUserDto } from "@/protos/protos/mingle_pb";
-import { MingleCacheService } from "./utility/CacheService";
 import { mingle } from "@/protos/protos/ErrorDetailResponse";
 import { group } from "console";
 import { createLocationApi } from "@/api/locationApi";
@@ -14,6 +13,8 @@ import { min } from "rxjs";
 import { NavigationProp } from "@react-navigation/native";
 import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
 import EveryDayTime from "./EventDayTime";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 
 
@@ -22,8 +23,8 @@ export default function LocationPage( { navigation }: { navigation: NavigationPr
     mode: "onBlur",
   });
 
+  const mingleUserDtoSelector=useSelector((state:RootState) => state.user); ;
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-  const [mingleUserDto, setMingleUserDto] = useState<MingleUserDto>();
   const [groupList, setGroupList] = useState<Array<MingleGroupDto>>(new Array<MingleGroupDto>());
   const [leagueList, setLeagueList] = useState<Array<MingleLeagueDto>>(new Array<MingleLeagueDto>());
   const {showError} = useErrorAlert();
@@ -48,7 +49,7 @@ export default function LocationPage( { navigation }: { navigation: NavigationPr
     })
 
 
-    let mingleLeauge =mingleUserDto?.getMinglegroupdtoList()
+    let mingleLeauge =mingleUserDtoSelector?.getMinglegroupdtoList()
     .find(group=>group.getId()===locationForm.mingleGroupInfo.id)?.
     getMingleleaguedtoList()
     .find(league=>league.getId()===locationForm.league.id) as MingleLeagueDto; 
@@ -70,10 +71,8 @@ export default function LocationPage( { navigation }: { navigation: NavigationPr
 
 
   useEffect(() => {
-     const userDto= MingleCacheService.get(); // Retrieve the data
+     const userDto= mingleUserDtoSelector; // Retrieve the data
     if (userDto) {
-        setMingleUserDto(userDto); // Update state
-        
         setGroupList(userDto.getMinglegroupdtoList().filter(group=>group.getMingleleaguedtoList().length>0) as Array<MingleGroupDto> || []);
     } else {
         console.warn("MingleUserDto is undefined. Check localStorage data.");
@@ -83,7 +82,7 @@ export default function LocationPage( { navigation }: { navigation: NavigationPr
 const mingleGroupInfoId = watch("mingleGroupInfo.id");
 useEffect(() => {
   if(!mingleGroupInfoId) return;
-  const groupDto =mingleUserDto?.getMinglegroupdtoList().filter(group=>group.getId()===mingleGroupInfoId)[0]
+  const groupDto =mingleUserDtoSelector?.getMinglegroupdtoList().filter(group=>group.getId()===mingleGroupInfoId)[0]
   if(!groupDto) return;
   setLeagueList(groupDto.getMingleleaguedtoList() as Array<MingleLeagueDto> || []);
 },[mingleGroupInfoId])

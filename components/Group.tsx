@@ -9,7 +9,6 @@ import { group } from "console";
 import { createGroupApi } from "@/api/GroupApi";
 import { ErrorDetailResponse } from "@/protos/protos/ErrorDetailResponse_pb";
 import ErrorAlert from "./ui/dialogBoxs/AlertPopup";
-import { MingleCacheService } from "./utility/CacheService";
 import { NavigationProp } from "@react-navigation/native";
 import { Mode } from "@/constants/State";
 
@@ -17,6 +16,9 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { MingleGroupDto, MingleUserDto } from "@/protos/protos/mingle_pb";
 import MingleUserInfo, { toMingleUserDto, toMingleUserInfo } from "./types/MingleUserInfo";
 import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
+import { mingleUserSlice, setMingleUser } from "@/store/mingleUserSlice";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 
 export default function Group({
@@ -32,18 +34,14 @@ export default function Group({
   const { showError } = useErrorAlert();
   const [photos, setPhotos] = useState<string[]>([]);
 
-  let mingleUserDto:MingleUserDto
-  useEffect(() => {
-    mingleUserDto = MingleCacheService.get() ;
-  },[])
-
-  const onSubmit = (data: MingleGroupInfo) => {
+  const mingleUserDto=useSelector((state:RootState) => state.user); ;
+    const onSubmit = (data: MingleGroupInfo) => {
     const mingleGroupDto=toMingleGroupDto(data);
     mingleGroupDto.setOrganizer(mingleUserDto)
 
     createGroupApi(mingleGroupDto).subscribe({
         next: (response:MingleGroupDto) => {
-            MingleCacheService.set(response.getOrganizer() as MingleUserDto); 
+            setMingleUser(response.getOrganizer() as MingleUserDto);
             console.log("Group created successfully:", response);
             navigation.navigate("LeaguesPage");
             
