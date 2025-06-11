@@ -40,6 +40,8 @@ import { refreshAccessToken } from "@/store/authSlice";
 import { useAutoDiscovery } from "expo-auth-session";
 import { issuer } from "@/constants/env";
 import { setMingleUser } from "@/store/mingleUserSlice";
+import { MingleMode } from "@/constants/MingleMode";
+import { store } from "@/store"; // Make sure this import exists
 
 
 
@@ -48,7 +50,7 @@ export default function Account({
   mode,
 }: {
   navigation: NavigationProp<any>;
-  mode: Mode;
+  mode: MingleMode;
 }) {
 const mingleUserSelector=useSelector((state:RootState) => state.user); ;
 const asyncDispatch = useDispatch<AppDispatch>()
@@ -69,6 +71,7 @@ const discovery = useAutoDiscovery(issuer);
     mode: "onChange",
   });
 
+  const dispatch = useDispatch();
   const handleSave = (password: string, confirmPassword: String) => {
     setValue("password", password);
     onSubmit();
@@ -107,28 +110,31 @@ const discovery = useAutoDiscovery(issuer);
     });
   };
 
-  const openDialog = () => {
+  const openDialog = async () => {
     if (mode === "new") {
       setOpen(true);
       return;
     } else {
-
       const updatedMingleUserAccount = getValues();
-
-      updatedMingleUserAccount.id=mingleUserSelector.getId()
-
       console.log(control._formValues);
 
       if (discovery) {
-        asyncDispatch(refreshAccessToken(discovery));
+        await asyncDispatch(refreshAccessToken(discovery));
       }
 
-      editAccountApi(toMingleUserDto(updatedMingleUserAccount),tokenSelector?.accessToken).subscribe({
+      // Get the latest token from the store after refresh
+      const latestToken = store.getState().auth.accessToken;
+      console.log("Refreshing access token...",store.getState().auth);
+
+      editAccountApi(
+        toMingleUserDto(updatedMingleUserAccount),
+        latestToken?.accessToken // Use the refreshed token here
+      ).subscribe({
         next: (mingleUserDto: MingleUserDto) => {
-          setMingleUser(mingleUserDto);
+          dispatch(setMingleUser(mingleUserDto));
           navigation.navigate("Home");
         },
-        error: (err:ErrorDetailResponse) => {
+        error: (err: ErrorDetailResponse) => {
           console.info("failed", err);
           showError(err);
         },

@@ -18,7 +18,12 @@ import { RootState } from "@/store";
 
 
 
-export default function LocationPage( { navigation }: { navigation: NavigationProp<any> }) {
+export default function LocationPage( 
+  { navigation,refreshToken }: { 
+    navigation: NavigationProp<any> 
+  refreshToken: () => Promise<void>
+  }
+) {
   const { control, handleSubmit, reset, getValues, watch, formState: { errors, isValid } } = useForm<LocationForm>({
     mode: "onBlur",
   });
@@ -29,7 +34,7 @@ export default function LocationPage( { navigation }: { navigation: NavigationPr
   const [leagueList, setLeagueList] = useState<Array<MingleLeagueDto>>(new Array<MingleLeagueDto>());
   const {showError} = useErrorAlert();
 
-  const onSubmit = (locationForm: LocationForm) => {
+  const onSubmit = async (locationForm: LocationForm) => {
     const mingleLocationDto =new MingleLocationDto()
     mingleLocationDto.setHostemail(locationForm.hostEmail);
     mingleLocationDto.setHostname(locationForm.hostName); 
@@ -55,6 +60,7 @@ export default function LocationPage( { navigation }: { navigation: NavigationPr
     .find(league=>league.getId()===locationForm.league.id) as MingleLeagueDto; 
   
     mingleLocationDto.setMingletimeslotdtoList(mingleTimeSlotList);
+    await refreshToken()
     createLocationApi(mingleLocationDto).subscribe({
       next: (response:MingleLocationDto) => {
         console.log("Location created successfully:", response);

@@ -23,13 +23,17 @@ import { findAllGroupsByUserId } from "@/api/GroupApi";
 import MingleUserInfo from "./types/MingleUserInfo";
 import { useErrorAlert } from "./ui/dialogBoxs/ErrorAlertContext";
 import { useSelector } from "react-redux";
-import { RootState } from "@/store";
+import { AppDispatch, RootState } from "@/store";
 import { setMingleUser } from "@/store/mingleUserSlice";
+import { useAutoDiscovery } from "expo-auth-session";
+import { issuer } from "@/constants/env";
 
 export default function LeaguePage({
   navigation,
+  refreshToken
 }: {
   navigation: NavigationProp<any>;
+  refreshToken: () => Promise<void>;
 }){
   const { control, handleSubmit, reset, formState: { errors, isValid } } = useForm<LeaguesForm>({
     mode: "onBlur",
@@ -42,7 +46,7 @@ export default function LeaguePage({
   
 
   
-  const onSubmit = (leaguesForm: LeaguesForm) => {
+  const onSubmit = async (leaguesForm: LeaguesForm) => {
     const mingleLeagueDto=new MingleLeagueDto();
     mingleLeagueDto.setEventname(leaguesForm.eventName);
     mingleLeagueDto.setStartdate(toYYYYMMDD(leaguesForm.startDate));
@@ -58,6 +62,7 @@ export default function LeaguePage({
     .find((group)=> group.getId()=== leaguesForm.mingleGroupInfo.id) as MingleGroupDto;
       
     console.log("sending MingleLeagueDto", mingleLeagueDto);
+    await refreshToken()   
     createLeagueApi(mingleLeagueDto).subscribe({
       next: (response:MingleLeagueDto) => {
       mingleGroupDto.addMingleleaguedto(response as MingleLeagueDto);
@@ -233,7 +238,7 @@ export default function LeaguePage({
               <Controller
                 control={control}
                 name="mingleGroupInfo.id"
-                defaultValue={groupList.length > 0 ? groupList[0].getId() : 0} // Provide a default value
+                defaultValue={groupList.length > 0 ? groupList[0].getId() : 0}
                 rules={{ required: "Please select a group" }}
                 render={({ field, fieldState: { error } }) => (
                   <TextField
@@ -243,10 +248,14 @@ export default function LeaguePage({
                     fullWidth
                     error={!!error}
                     helperText={error?.message}
+                    value={field.value ?? 0} // <-- Ensure value is never undefined
                   >
-                    { groupList.map((group) => (
+                    {groupList.length === 0 && (
+                      <MenuItem value={0}>--</MenuItem>
+                    )}
+                    {groupList.map((group) => (
                       <MenuItem key={group.getId()} value={group.getId()}>
-                        { group.getId()===0?'--':group.getGroupname()+" - "+group.getZip()}
+                        {group.getId() === 0 ? '--' : group.getGroupname() + " - " + group.getZip()}
                       </MenuItem>
                     ))}
                   </TextField>

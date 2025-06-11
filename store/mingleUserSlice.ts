@@ -8,7 +8,7 @@ export const mingleUserSlice = createSlice({
     initialState,
     reducers: {
         setMingleUser: (state, action: PayloadAction<MingleUserDto>) => 
-            Object.assign(state, action.payload)
+            state=action.payload
         ,
     },
 });

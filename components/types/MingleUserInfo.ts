@@ -25,7 +25,7 @@ import { MingleGroupDto, MingleUserDto } from '@/protos/protos/mingle_pb';
 import MingleGroupInfo, { toMingleGroupInfo } from './MingleGroupInfo';
   
   type MingleUserInfo ={
-    id?: number; // Not nullable
+    sub?: string; // Not nullable
     image?: Uint8Array
     bio?: string; // Optional since @Column(length = 500) isn't nullable
     firstname: string; // Not nullable
@@ -44,7 +44,6 @@ import MingleGroupInfo, { toMingleGroupInfo } from './MingleGroupInfo';
   }
 export const toMingleUserInfo = (response:MingleUserDto)=>{
       return {
-          id: response.getId(),
           email: response.getEmail(),
           password: response.getPassword(),
           image: Uint8Array.from(atob(response.getImage_asB64()), c => c.charCodeAt(0)),
@@ -67,7 +66,6 @@ export const toMingleUserInfo = (response:MingleUserDto)=>{
 
 export const toMingleUserDto = (response:MingleUserInfo)=>{
     const mingleUserDto =  new MingleUserDto();
-    mingleUserDto.setId(response.id ?? 0); // Provide a default value of 0 if response.id is undefined
     mingleUserDto.setEmail(response.email);
     mingleUserDto.setPassword(response.password);
     mingleUserDto.setImage(

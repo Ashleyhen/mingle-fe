@@ -33,7 +33,6 @@ import EventIcon from "@mui/icons-material/Event";
 import { useState } from "react";
 import { NavigationProp } from "@react-navigation/native";
 import { ScrollView } from "react-native";
-import {  DashBoardPage } from "./DashBoardPage";
 
 export default function HomeScreen({
   navigation,
@@ -144,7 +143,7 @@ export default function HomeScreen({
                 {
                   text: "Groups",
                   icon: <Groups2TwoToneIcon />,
-                  run: () => navigation.navigate("Group"),
+                  run: () => navigation.navigate("GroupPage", { Mode: "display" }),
                 },
                 {
                   text: "Location",
@@ -180,9 +179,6 @@ export default function HomeScreen({
           <Divider />
         </Toolbar>
       </ScrollView>
-
-      {/* Card to the right */}
-     <DashBoardPage></DashBoardPage> 
     </Box>
   );
 }

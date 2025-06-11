@@ -28,7 +28,6 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
 
   const discovery = useAutoDiscovery(issuer);
   const redirectUri = makeRedirectUri()
-  const tokenSelector=useSelector((state:RootState) => state.auth.accessToken) ;
   ;
   // https://rene-wilby.de/en/blog/rn-expo-oauth-authorization-code-flow-pkce-keycloak
   const [request, response, promptAsync] = useAuthRequest(
@@ -66,10 +65,12 @@ export default function SignInScreen({ navigation }: { navigation: NavigationPro
       token$.subscribe({
         next: (tokenResponse) => {
           const credentials = new CredentialsDto();
+          dispatch(setAccessToken(tokenResponse)); // Dispatch action to set access token in Redux store
           loginApi(credentials, tokenResponse.accessToken).subscribe({
             next: (response) => {
               console.log('Login successful:', response);
               console.log('Access Token:', tokenResponse.accessToken);
+
               dispatch(setMingleUser(response)); // Dispatch action to set access token in Redux store
               navigation.navigate("Home");
             },
