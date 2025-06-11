@@ -22,7 +22,7 @@ const client = new UserGrpcClient(baseUrl); // Envoy proxy URL
 const loginApi = (credentials: CredentialsDto, bearerToken: string): Observable<MingleUserDto> => {
   return new Observable((subscriber) => {
     // Prepare metadata with Authorization header if token is provided
-    client.login(credentials, setMetadata(bearerToken), (err: grpcWeb.RpcError, response: MingleUserDto) => 
+    client.login(credentials, setMetadata(), (err: grpcWeb.RpcError, response: MingleUserDto) => 
       handleResult(err, response, subscriber)
     );
   });
@@ -39,7 +39,7 @@ const createAccountApi = (mingleUserDto: MingleUserDto): Observable<MingleUserDt
 const editAccountApi = (mingleUserDto: MingleUserDto,bearerToken?:string): Observable<MingleUserDto> => {
   return new Observable((subscriber) => {
     // Create the gRPC CredentialsDto request object
-    client.update(mingleUserDto, setMetadata(bearerToken), (err: grpcWeb.RpcError, response: MingleUserDto) => {
+    client.update(mingleUserDto, setMetadata(), (err: grpcWeb.RpcError, response: MingleUserDto) => {
        handleResult(err, response, subscriber)
     });
   });

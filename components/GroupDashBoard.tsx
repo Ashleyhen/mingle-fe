@@ -51,6 +51,7 @@ export const GroupDashBoard = ({
     
     
     const actionFuncs =menuActionFuncs(group);
+    setLoading(false); // Simulate loading state
 
     return (
       <Card sx={{ maxWidth: 345, m: 2 }}>

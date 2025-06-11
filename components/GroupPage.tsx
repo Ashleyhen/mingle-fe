@@ -28,14 +28,19 @@ import { ScrollView } from "react-native";
 import { View } from "react-native-reanimated/lib/typescript/Animated";
 import { GroupDashBoard, MenuActionsFunctions } from "./GroupDashBoard";
 import { MingleMode } from "@/constants/MingleMode";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState, store } from "@/store";
 import { setMingleUser } from "@/store/mingleUserSlice";
+import { useAutoDiscovery } from "expo-auth-session";
+import { issuer } from "@/constants/env";
+import { refreshAccessToken } from "@/store/authSlice";
 
 export default function GroupPage({
   navigation,
+  refreshToken
 }: {
   navigation: NavigationProp<any>;
+  refreshToken: () => Promise<void>;
 }) {
   const {
     control,
@@ -54,11 +59,11 @@ export default function GroupPage({
   const [isExpanded, setIsExpanded] = useState(false); // State to control accordion expansion
   const [submitButtonTitle, setSubmitButtonTitle] = useState("Save");
   const mingleUserDto=useSelector((state:RootState) => state.user); ;
-  
-  const onSubmit = (data: MingleGroupInfo) => {
+  const onSubmit = async (data: MingleGroupInfo) => {
     const mingleGroupDto = toMingleGroupDto(data);
     mingleGroupDto.setOrganizer(mingleUserDto);
-
+    
+    await refreshToken()
     createGroupApi(mingleGroupDto).subscribe({
       next: (response: MingleGroupDto) => {
         setMingleUser(response.getOrganizer() as MingleUserDto);
@@ -320,3 +325,5 @@ export default function GroupPage({
     </>
   );
 }
+
+
